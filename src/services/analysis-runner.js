@@ -3,7 +3,7 @@ import { getPromptPath, promptExists } from '../utils/prompt-loader.js';
 import { generateReport } from '../utils/report-generator.js';
 import { generateOutputPath } from '../utils/output-manager.js';
 import { loadSettings, updateLastProvider, updateLastPrompt, addRecentClient, getBranding } from '../utils/settings-manager.js';
-import { info, warn, error as logError, ErrorFactory } from '../utils/logger.js';
+import { info, warn, error as logError, ErrorFactory, EnhancedError } from '../utils/logger.js';
 
 /**
  * Analysis Runner
@@ -149,7 +149,7 @@ export async function runAnalysis(options) {
     const totalTime = Date.now() - startTime;
 
     // Log error
-    if (err instanceof ErrorFactory.EnhancedError) {
+    if (err instanceof EnhancedError) {
       err.log();
     } else {
       logError('Analysis failed', err);
