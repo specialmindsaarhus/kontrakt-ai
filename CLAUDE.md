@@ -4,35 +4,51 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Status
 
-**Last Updated:** 2025-12-16
+**Last Updated:** 2025-12-16 (Phase 2 Complete)
 **GitHub Repository:** https://github.com/specialmindsaarhus/kontrakt-ai.git
 
 **Completed Phases:**
 - ✅ **Phase 0:** Git & GitHub setup (Initial commit pushed)
 - ✅ **Phase 1:** Basic Electron + React + Tailwind setup (All core files created and pushed)
+- ✅ **Phase 2:** Claude CLI Integration (Adapter architecture implemented, 20 tests passing)
 
-**Current Phase:** Phase 2 - Claude CLI Integration (pending)
+**Current Phase:** Phase 3 - Multiple Prompts (pending)
 
 **Next Immediate Steps:**
-1. Run `npm install` to install all dependencies
-2. Test Phase 1 setup with `npm run dev` (optional but recommended)
-3. Implement Phase 2: Claude CLI adapter and integration
+1. Create `prompts/` folder with preset system prompts
+2. Implement prompt templates for different document types
+3. Add UI integration for selecting review types (will be done in later phase with full UI)
 
 ### Key Files Created
 
-**Configuration Files:**
+**Phase 1 - Configuration Files:**
 - `package.json` - Project dependencies and scripts
 - `vite.config.js` - Vite bundler configuration
 - `tailwind.config.js` - Tailwind CSS configuration
 - `postcss.config.js` - PostCSS for Tailwind processing
 - `.gitignore` - Git ignore rules
 
-**Application Files:**
+**Phase 1 - Application Files:**
 - `electron/main.js` - Electron main process (creates app window)
 - `index.html` - HTML entry point
 - `src/main.jsx` - React application entry point
 - `src/App.jsx` - Main React component with basic UI
 - `src/index.css` - Tailwind CSS directives
+
+**Phase 2 - Specifications:**
+- `specs/cli-adapter.spec.md` - CLI adapter interface definition
+- `specs/data-models.spec.md` - Data structures (CLIRequest, CLIResult, etc.)
+- `specs/api-contracts.spec.md` - Function signatures and API contracts
+
+**Phase 2 - Implementation:**
+- `src/utils/cli-detector.js` - Detects available CLI providers (Claude, Gemini, OpenAI)
+- `src/adapters/claude-adapter.js` - Claude CLI adapter implementation
+- `src/services/cli-runner.js` - Universal CLI runner that routes to adapters
+
+**Phase 2 - Tests:**
+- `tests/adapters/claude-adapter.test.js` - Unit tests (20 tests, all passing)
+- `tests/test-cli-detector.js` - CLI detection verification test
+- `tests/test-cli-integration.js` - End-to-end integration test template
 
 **Documentation:**
 - `CLAUDE.md` - This file (project documentation)
@@ -73,6 +89,42 @@ git pull origin main # Get latest changes
 
 ### 5. Continue with Next Phase
 Refer to the "Next Steps" section below for the current phase implementation details.
+
+## Important Changes from Original Plan
+
+### Phase 2 Implementation Discoveries
+
+During Phase 2 implementation, we discovered that the actual Claude CLI syntax differs significantly from our initial assumptions:
+
+**Original Plan (Incorrect):**
+```bash
+claude --files ./documents/contract.txt --mcp-context ./reference-docs/ --system ./prompts/franchise-contract-review.md
+```
+
+**Actual Claude CLI Syntax:**
+```bash
+claude --print --system-prompt "System prompt text" "User prompt with document content"
+```
+
+**Key Changes:**
+1. **No direct file input:** Claude CLI doesn't accept `--files` flag. Instead, we read file contents and pass them as part of the prompt text.
+2. **System prompt handling:** Uses `--system-prompt` flag with the prompt text (not file path).
+3. **Print mode required:** Must use `--print` flag for non-interactive, scriptable output.
+4. **Reference materials:** No built-in support for reference directories. Reference documents must be read and included in the prompt text.
+
+**Implementation Impact:**
+- `claude-adapter.js` reads document and system prompt files, then constructs the prompt text
+- Reference materials are mentioned in the prompt (future: could read and include their content)
+- Adapter uses `child_process.spawn()` with proper argument handling
+
+**Detected CLI Versions:**
+- Claude CLI v2.0.70 (detected and working)
+- Gemini CLI v0.14.0 (detected, adapter not yet implemented)
+- OpenAI CLI (not installed on development machine)
+
+**Next Adapters:**
+- Gemini and OpenAI adapters will need to be researched for their actual CLI syntax
+- Cannot assume similar patterns - each CLI has its own command structure
 
 ## Project Overview
 
@@ -225,10 +277,11 @@ Each adapter (`gemini-adapter.js`, `claude-adapter.js`, `openai-adapter.js`) mus
 gemini chat --file ./documents/contract.txt --context ./reference-docs/ --system-prompt ./prompts/franchise-contract-review.md
 ```
 
-**Claude CLI Example:**
+**Claude CLI Example (Actual Implementation):**
 ```bash
-claude --files ./documents/contract.txt --mcp-context ./reference-docs/ --system ./prompts/franchise-contract-review.md
+claude --print --system-prompt "System prompt text" "Please analyze the following document: [document content]"
 ```
+Note: Claude CLI requires reading file contents and passing them as text, not file paths.
 
 **OpenAI CLI Example:**
 ```bash
@@ -383,52 +436,51 @@ npm run preview         # Preview production build
 - Test adapters with actual CLI documentation (syntax may change with CLI updates)
 - Consider adding CLI version check to warn about incompatible versions
 
-## Next Steps: Phase 2 - Claude CLI Integration
+## Next Steps: Phase 3 - Multiple Prompts
 
-**Goal:** Implement working CLI execution with Claude CLI
+**Goal:** Create preset system prompts for different review types
 
 **Files to Create:**
 
-1. **`specs/cli-adapter.spec.md`** - Interface definition
-   - Define `CLIAdapter` interface that all adapters must implement
-   - Methods: `isAvailable()`, `getVersion()`, `buildCommand()`, `execute()`, `normalizeOutput()`
+1. **`prompts/franchise-contract-review.md`** - Contract review system prompt
+   - Focus: Legal risks, unclear clauses, missing protections, territorial rights, fees, termination
+   - Output format: Structured markdown with sections (see System Prompts Library above)
+   - Language: Danish (Danish consultant, Danish contracts)
 
-2. **`specs/data-models.spec.md`** - Data structures
-   - Define `CLIRequest`, `CLIResult`, `DocumentMetadata`, `ReportConfig` interfaces
+2. **`prompts/franchise-manual-review.md`** - Operations manual review system prompt
+   - Focus: Completeness, operational clarity, consistency with contract, brand standards
+   - Output format: Structured markdown with sections
+   - Language: Danish
 
-3. **`specs/api-contracts.spec.md`** - Function signatures
-   - Document key functions: `convertToText()`, `runCLI()`, `generatePDF()`, etc.
+3. **`prompts/compliance-check.md`** - Compliance verification system prompt
+   - Focus: Legal compliance, missing required clauses, regulatory requirements
+   - Output format: Structured markdown with sections
+   - Language: Danish
 
-4. **`src/adapters/claude-adapter.js`** - Claude CLI adapter implementation
-   - Check if Claude CLI is available using `where claude` (Windows) or `which claude` (macOS)
-   - Construct command: `claude --files "{filePath}" --system "{promptPath}"`
-   - Execute via `child_process.spawn()` and capture stdout/stderr
-   - Return `CLIResult` object
+4. **`src/utils/prompt-loader.js`** - Prompt loading utility (optional)
+   - Function to list available prompts
+   - Function to load prompt by name
+   - Validation for prompt file format
 
-5. **`src/services/cli-runner.js`** - Universal CLI runner
-   - Accept `CLIRequest` object
-   - Route to appropriate adapter based on provider
-   - Handle errors gracefully
-
-6. **`src/utils/cli-detector.js`** - CLI detection utility
-   - Detect which CLIs are installed on the system
-   - Return array of available CLI providers
-
-7. **`tests/adapters/claude-adapter.test.js`** - Unit tests
-   - Mock `child_process` for testing
-   - Test command construction
-   - Test error handling
+5. **`tests/prompts/` folder** - Test prompts for unit tests
+   - Simplified test prompts for testing prompt loading functionality
 
 **Success Criteria:**
-- Can execute Claude CLI from Node.js
-- Captures stdout output
-- Returns structured `CLIResult` object
-- Handles errors (CLI not found, execution failure)
+- Three working system prompts created and tested manually
+- Prompts produce structured, consistent output format
+- Prompts work with Claude CLI adapter
+- Ready for UI integration in later phase
+
+**Testing:**
+```bash
+# Manual test with test document and new prompt
+node tests/test-cli-integration.js
+```
 
 **Git Commit:**
 ```bash
-git add .
-git commit -m "Phase 2 complete: Claude CLI integration working"
+git add prompts/ src/utils/prompt-loader.js tests/prompts/
+git commit -m "Phase 3 complete: Multiple system prompts implemented"
 git push origin main
 ```
 
