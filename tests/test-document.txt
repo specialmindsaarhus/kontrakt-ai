@@ -1,0 +1,11 @@
+FRANCHISE AGREEMENT TEST DOCUMENT
+
+This is a test franchise agreement for Acme Franchise Company.
+
+1. TERRITORY: The franchisee shall operate in the territory of Copenhagen, Denmark.
+
+2. FEES: Initial franchise fee is 50,000 DKK. Monthly royalty is 5% of gross revenue.
+
+3. TERM: The agreement is valid for 5 years from the signing date.
+
+4. TERMINATION: Either party may terminate with 90 days written notice.
