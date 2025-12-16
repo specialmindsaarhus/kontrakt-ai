@@ -1,0 +1,68 @@
+{
+  "name": "contract-reviewer",
+  "version": "1.0.0",
+  "description": "Desktop GUI for reviewing franchise contracts and manuals using LLM CLIs",
+  "main": "electron/main.js",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && electron .\"",
+    "electron:build": "vite build && electron-builder",
+    "build:win": "npm run build && electron-builder --win --x64",
+    "build:mac": "npm run build && electron-builder --mac",
+    "test": "vitest"
+  },
+  "keywords": [
+    "franchise",
+    "contract",
+    "review",
+    "electron",
+    "react"
+  ],
+  "author": "Special Minds Aarhus",
+  "license": "MIT",
+  "dependencies": {
+    "electron": "^28.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "pdf-parse": "^1.1.1",
+    "mammoth": "^1.6.0",
+    "docx": "^8.5.0",
+    "puppeteer": "^21.6.1",
+    "marked": "^11.1.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.1",
+    "vite": "^5.0.10",
+    "electron-builder": "^24.9.1",
+    "tailwindcss": "^3.4.1",
+    "vitest": "^1.1.1",
+    "@testing-library/react": "^14.1.2",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.33",
+    "concurrently": "^8.2.2",
+    "wait-on": "^7.2.0"
+  },
+  "build": {
+    "appId": "com.specialminds.contractreviewer",
+    "productName": "Contract Reviewer",
+    "directories": {
+      "buildResources": "build",
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "dist/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns"
+    }
+  }
+}
