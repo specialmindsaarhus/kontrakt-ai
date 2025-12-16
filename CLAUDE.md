@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Status
 
-**Last Updated:** 2025-12-16 (Phase 5 Complete with Bug Fix)
+**Last Updated:** 2025-12-16 (Phase 6 - Visual Design Complete)
 **GitHub Repository:** https://github.com/specialmindsaarhus/kontrakt-ai.git
 
 **Completed Phases:**
@@ -14,8 +14,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ **Phase 3:** Multiple System Prompts (3 Danish prompts created, prompt loader implemented, integration tests passing)
 - ✅ **Phase 4:** Professional Report Generation (PDF/Word/Markdown generators implemented, 6 tests passing, professional formatting)
 - ✅ **Phase 5:** Polish & Production (Complete workflow orchestration, settings persistence, enhanced error handling, end-to-end testing)
+- ✅ **Phase 6:** Visual Design & Mockups (Interactive mockup created, design system established, ready for frontend implementation)
 
-**System Status:** Backend complete - Minor bug fix applied
+**System Status:** Backend complete | Visual design approved | Ready for frontend implementation
 
 **Recent Changes:**
 - 🐛 Fixed `instanceof` error in analysis-runner.js (import EnhancedError)
@@ -783,3 +784,297 @@ Understanding the end user's workflow helps guide implementation priorities:
 - Produces professional reports ready to send to clients
 - Maintains client confidentiality (local processing only)
 - Allows quick switching between different review types and LLM providers
+
+---
+
+## Phase 6: Visual Design & Mockups
+
+**Completed:** 2025-12-16
+**Status:** ✅ Design approved, ready for implementation
+
+### Design Philosophy
+
+The visual design went through multiple iterations to find the right balance:
+
+1. **v1:** Over-decorated with too many competing elements (shadows, borders, pills) - "Generic SaaS feel"
+2. **v2:** Too minimal, bland, no personality - Swung too far into minimalism
+3. **v3:** Added brand identity but still felt template-grade
+4. **v4:** ✅ **Final approved design** - Light background with strategic dark elements, intentional and memorable
+
+**Key Principle:** World-class design is about **making decisions**, not adding decoration.
+
+### Visual Design System
+
+**Mockup File:** `mockups/main-screen-v4.html` (interactive HTML with all 6 states)
+
+#### Color Palette
+
+```css
+/* Primary Colors */
+--primary-dark: #0d1321;           /* Dark blue-tinted black for buttons, text */
+--primary-accent: #2563eb;         /* Blue for selected states */
+--success-green: #10b981;          /* Vibrant green for success feedback */
+--error-red: #dc2626;              /* Strong red for errors */
+--background-light: #FAFAFA;       /* Light gray background */
+```
+
+**Design Rationale:**
+- **#0d1321** instead of pure black - more sophisticated, blue undertone
+- **Color restraint** - Neutral UI, color only for state (selected, success, error)
+- **No Google-ish defaults** - Avoided #1a73e8, created unique identity
+
+#### Typography
+
+**Font Stack:**
+```css
+font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+```
+
+**Weight Hierarchy:**
+- **600 (Semi-bold):** Status messages, button selected state
+- **500 (Medium):** Body text, button default state
+- **400 (Regular):** Secondary text
+
+**Typography-Led Design:**
+- Text does more work than boxes
+- Larger status text (16-18px) for hierarchy
+- No emojis - pure typography
+
+**Font Choice:** Inter from Google Fonts - modern, highly readable, designed for screens
+
+#### Layout & Spacing
+
+**Full Screen Design:**
+```css
+height: 100vh;              /* No scrolling needed */
+display: flex;
+flex-direction: column;
+padding: 100px 48px 48px;   /* Room for controls */
+```
+
+**Expressive Spacing (Intentional Imbalance):**
+- Header margin: `72px` (loose - creates rhythm)
+- Prompt buttons: `48px` top margin
+- Status area: `64px` top margin
+- Related items: Tight spacing
+- Important items: Loose spacing
+
+**Rationale:** Creates rhythm instead of uniform grid monotony
+
+#### Components
+
+**1. Logo (Icon Only)**
+```css
+width: 48px;
+height: 48px;
+background: #0d1321;
+border-radius: 50%;
+/* White "K" letter centered */
+```
+
+**2. Hamburger Menu**
+```css
+background: transparent;   /* No dark background */
+color: #0d1321;
+opacity: 0.6;
+transition: 400ms;
+/* Hover: opacity 1.0 */
+```
+
+**3. Drop Zone (The Hero Moment)**
+```css
+height: 360px;                    /* Larger - fills available space */
+border: 1px solid rgba(13, 19, 33, 0.1);  /* Subtle, not dashed */
+border-radius: 8px;
+background: white;
+transition: all 0.4s;
+
+/* States */
+:hover {
+    border-color: #0d1321;
+    border-width: 2px;
+}
+
+.hovering {
+    border-width: 3px;
+    background: #f5f5f5;
+}
+
+.completed {
+    border-color: #0d1321;
+    border-width: 3px;
+}
+
+.error {
+    border-color: #dc2626;
+    border-width: 3px;
+}
+```
+
+**Design Rationale:**
+- NO dashed border (user feedback: felt off)
+- Solid borders with varying thickness for state
+- More breathing room (360px vs 300px)
+- White background (surface to place on)
+- Border thickness matches buttons (1px → 2px → 3px)
+
+**4. Buttons (Reversed Style)**
+
+**Unselected (Default):**
+```css
+background: white;
+border: 1px solid rgba(13, 19, 33, 0.15);
+color: #0d1321;
+font-weight: 500;
+border-radius: 5px;
+transition: 400ms;
+```
+
+**Hover:**
+```css
+border-color: #0d1321;
+border-width: 2px;
+font-weight: 600;
+```
+
+**Selected:**
+```css
+background: #0d1321;
+border-color: #0d1321;
+color: white;
+font-weight: 600;
+```
+
+**Design Rationale:**
+- Reversed from initial dark-outline style (user feedback: "something was off")
+- Light buttons feel cleaner, less heavy
+- Border thickness matches drop zone for cohesion
+- Selected state is immediately obvious (dark background)
+
+**5. Icons (Lucide Icons)**
+
+Proper SVG icons instead of text characters:
+- `upload-cloud` (not `+`)
+- `check-circle` (not `✓`)
+- `alert-triangle` (not `!`)
+- `loader` (spinning animation)
+- `arrow-down-circle` (on hover)
+- `menu` (hamburger)
+
+**Library:** [Lucide Icons](https://lucide.dev) (clean, comprehensive, professional)
+
+#### Micro-Interactions & Delight
+
+**Success Checkmark Animation:**
+```css
+@keyframes checkmarkPop {
+    0%   { transform: scale(0); opacity: 0; }
+    50%  { transform: scale(1.3); opacity: 1; }  /* Overshoot */
+    100% { transform: scale(1); opacity: 1; }     /* Settle */
+}
+animation: checkmarkPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+```
+
+**Rationale:**
+- Bouncy, satisfying animation
+- Elastic easing curve for playfulness
+- Green color (#10b981) - vibrant, not muted
+- No "Færdig" text - animation is the feedback
+
+**Progress Bars:**
+```css
+@keyframes progressFill {
+    from { width: 0%; }
+    to { width: 100%; }
+}
+animation: progressFill 0.4s ease-out forwards;
+```
+
+**Button Transitions:**
+```css
+transition: all 0.4s;  /* Consistent timing */
+```
+
+**Spinner Animation:**
+```css
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+animation: spin 2s linear infinite;
+```
+
+#### UI States
+
+The mockup demonstrates 6 interactive states:
+
+1. **Idle** - Default, waiting for user action
+2. **Prompt Selected** - One of 3 buttons selected (dark background)
+3. **File Hover** - User dragging file (thicker border, darker)
+4. **Analysis Running** - Processing (spinner, progress bars, status messages)
+5. **Completed** - Success (animated checkmark, output buttons, time)
+6. **Error** - Failure (red border, error message, retry button)
+
+**State Transitions:** All smooth with 400ms timing
+
+#### Design Learnings & Iteration Notes
+
+**What Worked:**
+- ✅ Light buttons with borders (cleaner than dark outline style)
+- ✅ #0d1321 instead of pure black (more sophisticated)
+- ✅ Solid borders instead of dashed (less "placeholder-y")
+- ✅ Border thickness consistency (1px → 2px → 3px)
+- ✅ Success animation without text (visual delight)
+- ✅ Full-screen layout (no scrolling)
+- ✅ Typography-led hierarchy
+- ✅ Lucide icons (professional polish)
+
+**What Didn't Work:**
+- ❌ v1: Too many competing elements (shadows, pills, rounded corners everywhere)
+- ❌ v2: Too minimal/bland (no personality, generic system fonts)
+- ❌ v3: Template-grade hamburger menu (dark background felt heavy)
+- ❌ Initial dark-outline buttons (felt "off", reversed to light)
+- ❌ Dashed border on drop zone (felt like placeholder)
+- ❌ "Færdig" text on success (redundant with animated checkmark)
+
+**Key Insight:**
+> "World-class designers don't decorate more — they decide harder."
+
+The final design achieves:
+- **ONE strong opinion:** Dark elements on light (inverted dark mode)
+- **Typography doing the work:** Less boxes, more text hierarchy
+- **Intentional spacing:** Rhythm instead of uniform grid
+- **Quiet success, loud errors:** Green checkmark vs red border
+- **Strategic color:** Neutral UI, color only for state
+
+### Files Created
+
+**Phase 6 - Visual Design:**
+- `mockups/main-screen-v4.html` - Final approved interactive mockup
+  - All 6 UI states (idle, prompt selected, hover, running, completed, error)
+  - Lucide Icons integration
+  - Inter font from Google Fonts
+  - Full-screen responsive layout
+  - All animations and transitions
+  - State toggle controls for testing
+
+### Next Steps
+
+**Phase 7: Frontend Specification & Implementation**
+
+Now that visual design is approved, create technical specifications:
+
+1. **Create Frontend Specs** (following backend spec-dev pattern):
+   - `specs/ui-components.spec.md` - Component interfaces (props, state, events)
+   - `specs/state-management.spec.md` - Application state structure
+   - `specs/ipc-contracts.spec.md` - Electron IPC communication
+   - `specs/user-flows.spec.md` - Complete user interaction flows
+
+2. **Implement Frontend** (after specs approved):
+   - Secure IPC setup (preload.js, contextBridge)
+   - React components matching mockup
+   - State management (Context + useReducer)
+   - Backend integration
+   - Testing (unit, integration, E2E)
+
+**Visual Reference:** All frontend implementation should match `mockups/main-screen-v4.html` exactly.
