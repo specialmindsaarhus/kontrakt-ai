@@ -12,7 +12,10 @@ out/
 # Temporary files
 documents/
 reference-docs/
-output/
+
+# Output directory (exclude generated files but keep directory)
+output/*
+!output/.gitkeep
 
 # OS files
 .DS_Store
