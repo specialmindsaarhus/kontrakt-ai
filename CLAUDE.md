@@ -2,6 +2,78 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Current Status
+
+**Last Updated:** 2025-12-16
+**GitHub Repository:** https://github.com/specialmindsaarhus/kontrakt-ai.git
+
+**Completed Phases:**
+- ✅ **Phase 0:** Git & GitHub setup (Initial commit pushed)
+- ✅ **Phase 1:** Basic Electron + React + Tailwind setup (All core files created and pushed)
+
+**Current Phase:** Phase 2 - Claude CLI Integration (pending)
+
+**Next Immediate Steps:**
+1. Run `npm install` to install all dependencies
+2. Test Phase 1 setup with `npm run dev` (optional but recommended)
+3. Implement Phase 2: Claude CLI adapter and integration
+
+### Key Files Created
+
+**Configuration Files:**
+- `package.json` - Project dependencies and scripts
+- `vite.config.js` - Vite bundler configuration
+- `tailwind.config.js` - Tailwind CSS configuration
+- `postcss.config.js` - PostCSS for Tailwind processing
+- `.gitignore` - Git ignore rules
+
+**Application Files:**
+- `electron/main.js` - Electron main process (creates app window)
+- `index.html` - HTML entry point
+- `src/main.jsx` - React application entry point
+- `src/App.jsx` - Main React component with basic UI
+- `src/index.css` - Tailwind CSS directives
+
+**Documentation:**
+- `CLAUDE.md` - This file (project documentation)
+- Implementation plan: `~/.claude/plans/shimmying-doodling-thacker.md`
+
+## Resuming Development
+
+If you're resuming work on this project after a break, follow these steps:
+
+### 1. Install Dependencies (First Time Only)
+```bash
+npm install
+```
+This installs all packages defined in `package.json`.
+
+### 2. Test Current Setup
+```bash
+npm run dev
+```
+This should launch the Electron app with a basic welcome screen. If successful, you'll see:
+- Electron window opens
+- "Contract Reviewer" header
+- Welcome message with status indicator
+
+### 3. Review Implementation Plan
+The detailed implementation plan is located at:
+```
+~/.claude/plans/shimmying-doodling-thacker.md
+```
+This file contains the complete phase-by-phase implementation strategy.
+
+### 4. Check Current Branch and Commits
+```bash
+git status           # Check current state
+git log --oneline    # View commit history
+git pull origin main # Get latest changes
+```
+
+### 5. Continue with Next Phase
+Refer to the "Next Steps" section below for the current phase implementation details.
+
 ## Project Overview
 
 Contract Review GUI is an Electron-based desktop application for Windows and macOS that provides a user-friendly interface for reviewing franchise-related documents using multiple LLM CLI solutions (Gemini CLI, Claude CLI, OpenAI CLI). The application allows users to drag-and-drop documents and reference materials, then receives structured feedback from the LLM without exposing CLI complexity.
@@ -190,26 +262,32 @@ Note: Exact CLI subcommands and flags may vary. Adapters must accommodate each p
 
 ## Development Commands
 
-### Setup
+### Setup (First Time)
 ```bash
 npm install
 ```
 
 ### Run Development Mode
 ```bash
-npm start
+npm run dev              # Start Vite dev server only
+npm run electron:dev     # Start Electron app with hot reload (recommended)
 ```
 
-### Build for Distribution
+### Run Tests
 ```bash
-npm run build:win    # Windows .exe
-npm run build:mac    # macOS .dmg
+npm test                 # Run Vitest unit tests
 ```
 
-### Package with Electron Builder
+### Build for Production
 ```bash
-electron-builder --win --x64
-electron-builder --mac
+npm run build           # Build for production
+npm run build:win       # Build Windows .exe installer
+npm run build:mac       # Build macOS .dmg installer
+```
+
+### Other Commands
+```bash
+npm run preview         # Preview production build
 ```
 
 ## MVP Checklist (Development Priority)
@@ -304,6 +382,55 @@ electron-builder --mac
 - Always wrap file paths in quotes to handle spaces: `--file "path/to/my document.pdf"`
 - Test adapters with actual CLI documentation (syntax may change with CLI updates)
 - Consider adding CLI version check to warn about incompatible versions
+
+## Next Steps: Phase 2 - Claude CLI Integration
+
+**Goal:** Implement working CLI execution with Claude CLI
+
+**Files to Create:**
+
+1. **`specs/cli-adapter.spec.md`** - Interface definition
+   - Define `CLIAdapter` interface that all adapters must implement
+   - Methods: `isAvailable()`, `getVersion()`, `buildCommand()`, `execute()`, `normalizeOutput()`
+
+2. **`specs/data-models.spec.md`** - Data structures
+   - Define `CLIRequest`, `CLIResult`, `DocumentMetadata`, `ReportConfig` interfaces
+
+3. **`specs/api-contracts.spec.md`** - Function signatures
+   - Document key functions: `convertToText()`, `runCLI()`, `generatePDF()`, etc.
+
+4. **`src/adapters/claude-adapter.js`** - Claude CLI adapter implementation
+   - Check if Claude CLI is available using `where claude` (Windows) or `which claude` (macOS)
+   - Construct command: `claude --files "{filePath}" --system "{promptPath}"`
+   - Execute via `child_process.spawn()` and capture stdout/stderr
+   - Return `CLIResult` object
+
+5. **`src/services/cli-runner.js`** - Universal CLI runner
+   - Accept `CLIRequest` object
+   - Route to appropriate adapter based on provider
+   - Handle errors gracefully
+
+6. **`src/utils/cli-detector.js`** - CLI detection utility
+   - Detect which CLIs are installed on the system
+   - Return array of available CLI providers
+
+7. **`tests/adapters/claude-adapter.test.js`** - Unit tests
+   - Mock `child_process` for testing
+   - Test command construction
+   - Test error handling
+
+**Success Criteria:**
+- Can execute Claude CLI from Node.js
+- Captures stdout output
+- Returns structured `CLIResult` object
+- Handles errors (CLI not found, execution failure)
+
+**Git Commit:**
+```bash
+git add .
+git commit -m "Phase 2 complete: Claude CLI integration working"
+git push origin main
+```
 
 ## Franchise Consultant Workflow
 
