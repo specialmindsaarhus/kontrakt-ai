@@ -116,8 +116,8 @@ function setupIPCHandlers() {
 
   ipcMain.handle('prompts:get-available', async (event) => {
     try {
-      const { listPrompts } = await import('../src/utils/prompt-loader.js');
-      const promptNames = await listPrompts();
+      const { listAvailablePrompts } = await import('../src/utils/prompt-loader.js');
+      const promptNames = await listAvailablePrompts();
 
       // Map to display format
       const prompts = promptNames.map(name => ({
