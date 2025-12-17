@@ -6,7 +6,15 @@
       "Bash(git commit:*)",
       "Bash(git remote add:*)",
       "Bash(git branch:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(npm install)",
+      "Bash(npm test)",
+      "Bash(where:*)",
+      "Bash(npm test:*)",
+      "Bash(node tests/test-cli-detector.js:*)",
+      "Bash(mkdir:*)",
+      "Bash(node:*)",
+      "Bash(npm install:*)"
     ]
   }
 }
