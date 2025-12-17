@@ -14,7 +14,21 @@
       "Bash(node tests/test-cli-detector.js:*)",
       "Bash(mkdir:*)",
       "Bash(node:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(findstr:*)",
+      "Bash(Select-Object -Last 20)",
+      "Bash(if [ -f \"$HOME/.contract-reviewer/logs/app.log\" ])",
+      "Bash(then tail -50 \"$HOME/.contract-reviewer/logs/app.log\")",
+      "Bash(else echo \"Log file not found\")",
+      "Bash(fi)",
+      "Bash(claude --version:*)",
+      "Bash(claude --print \"Respond with just the word ''working''\")",
+      "Bash(timeout 180 node:*)",
+      "Bash(claude --print:*)",
+      "Bash(if [ -f \"$HOME/.contract-reviewer/settings.json\" ])",
+      "Bash(then cat \"$HOME/.contract-reviewer/settings.json\")",
+      "Bash(else echo \"No settings file yet\")",
+      "Bash(gemini:*)"
     ]
   }
 }

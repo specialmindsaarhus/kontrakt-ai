@@ -4,19 +4,19 @@ import path from 'path';
 import { isCLIAvailable, getCLIVersion } from '../utils/cli-detector.js';
 
 /**
- * Claude CLI Adapter
- * Implements the CLIAdapter interface for Claude CLI
+ * Gemini CLI Adapter
+ * Implements the CLIAdapter interface for Gemini CLI
  */
-export class ClaudeAdapter {
+export class GeminiAdapter {
   constructor() {
-    this.providerName = 'claude';
-    this.cliCommand = 'claude';
+    this.providerName = 'gemini';
+    this.cliCommand = 'gemini';
     this._isAvailableCache = null;
     this._versionCache = null;
   }
 
   /**
-   * Check if Claude CLI is installed and available
+   * Check if Gemini CLI is installed and available
    * @returns {Promise<boolean>}
    */
   async isAvailable() {
@@ -29,7 +29,7 @@ export class ClaudeAdapter {
   }
 
   /**
-   * Get the installed version of Claude CLI
+   * Get the installed version of Gemini CLI
    * @returns {Promise<string|null>}
    */
   async getVersion() {
@@ -46,13 +46,13 @@ export class ClaudeAdapter {
   }
 
   /**
-   * Build the Claude CLI command with arguments
+   * Build the Gemini CLI command with arguments
    * @param {CLIRequest} request
-   * @returns {{args: string[], prompt: string}} Command arguments and prompt text
-   * @throws {Error} If validation fails
+   * @returns {{args: string[], prompt: string}}
+   * @private
    */
   buildCommand(request) {
-    // Validate required fields
+    // Validate inputs
     if (!request.documentPath) {
       throw new Error('Document path is required');
     }
@@ -71,16 +71,16 @@ export class ClaudeAdapter {
     // Build command arguments
     const args = [];
 
-    // Add print flag for non-interactive output
-    args.push('--print');
+    // Gemini CLI uses positional arguments for one-shot mode
+    // No need for --output-format (it causes interactive mode)
 
-    // Read and add system prompt content
+    // Gemini CLI doesn't have --system-prompt flag
+    // We need to prepend system prompt to the user prompt
     const systemPrompt = readFileSync(request.systemPromptPath, 'utf8');
-    args.push('--system-prompt', systemPrompt);
-
-    // Build the prompt with document content
     const documentContent = readFileSync(request.documentPath, 'utf8');
-    let prompt = `Please analyze the following document:\n\n${documentContent}`;
+
+    // Combine system prompt + user request + document
+    let prompt = `${systemPrompt}\n\n---\n\nPlease analyze the following document:\n\n${documentContent}`;
 
     // Add reference materials if provided
     if (request.referencePath && existsSync(request.referencePath)) {
@@ -93,20 +93,23 @@ export class ClaudeAdapter {
   }
 
   /**
-   * Execute the Claude CLI command
+   * Execute the Gemini CLI command
    * @param {CLIRequest} request
    * @returns {Promise<CLIResult>}
    */
   async execute(request) {
     const startTime = Date.now();
+    console.log('[DEBUG] GeminiAdapter.execute() called');
+    console.log('[DEBUG] Request:', { documentPath: request.documentPath, timeout: request.timeout });
 
     try {
       // Check if CLI is available
+      console.log('[DEBUG] Checking Gemini CLI availability...');
       if (!(await this.isAvailable())) {
         return {
           success: false,
           provider: this.providerName,
-          error: 'Claude CLI not found. Please install it from https://claude.ai/cli',
+          error: 'Gemini CLI not found. Please install it from https://gemini.google.com/cli',
           errorCode: 'CLI_NOT_FOUND',
           executionTime: Date.now() - startTime
         };
@@ -115,8 +118,11 @@ export class ClaudeAdapter {
       // Build command
       let commandData;
       try {
+        console.log('[DEBUG] Building Gemini command...');
         commandData = this.buildCommand(request);
+        console.log('[DEBUG] Command built. Args:', commandData.args.length, 'Prompt length:', commandData.prompt.length);
       } catch (error) {
+        console.log('[DEBUG] buildCommand() failed:', error.message);
         return {
           success: false,
           provider: this.providerName,
@@ -127,7 +133,7 @@ export class ClaudeAdapter {
       }
 
       // Execute CLI command
-      const result = await this._executeCommand(commandData.args, commandData.prompt, request.timeout || 300000);
+      const result = await this._executeCommand(commandData.args, commandData.prompt, request.timeout || 180000);
 
       // Get CLI version
       const version = await this.getVersion();
@@ -168,7 +174,7 @@ export class ClaudeAdapter {
    * Execute the CLI command using spawn
    * @private
    * @param {string[]} args - Command arguments
-   * @param {string} prompt - The prompt text to pass to Claude
+   * @param {string} prompt - The prompt text to pass to Gemini
    * @param {number} timeout - Timeout in milliseconds
    * @returns {Promise<{success: boolean, stdout: string, stderr: string, error?: string, errorCode?: string}>}
    */
@@ -178,20 +184,22 @@ export class ClaudeAdapter {
       let stderr = '';
       let timedOut = false;
 
-      // Build full argument list with prompt at the end
-      const fullArgs = [...args, prompt];
-
       // Debug logging
-      console.log('[DEBUG] Executing Claude CLI:');
+      console.log('[DEBUG] Executing Gemini CLI:');
       console.log('[DEBUG] Command:', this.cliCommand);
-      console.log('[DEBUG] Args count:', fullArgs.length);
+      console.log('[DEBUG] Args count:', args.length);
       console.log('[DEBUG] Timeout:', timeout, 'ms');
       console.log('[DEBUG] Prompt length:', prompt.length, 'chars');
 
-      const child = spawn(this.cliCommand, fullArgs, {
+      // Gemini CLI works best with stdin for long prompts
+      const child = spawn(this.cliCommand, args, {
         shell: true
         // Remove timeout from spawn options - we handle it manually below
       });
+
+      // Write prompt to stdin
+      child.stdin.write(prompt);
+      child.stdin.end();
 
       // Set up timeout handler
       const timeoutId = setTimeout(() => {
@@ -241,7 +249,7 @@ export class ClaudeAdapter {
               success: false,
               stdout,
               stderr,
-              error: 'Authentication required. Please run "claude login" in your terminal.',
+              error: 'Authentication required. Please run "gemini login" or authenticate in your terminal.',
               errorCode: 'AUTH_REQUIRED'
             });
           } else {
@@ -250,68 +258,47 @@ export class ClaudeAdapter {
               stdout,
               stderr,
               error: `Command failed with exit code ${code}. Error: ${stderr || 'Unknown error'}`,
-              errorCode: 'EXECUTION_FAILED'
+              errorCode: 'COMMAND_FAILED'
             });
           }
         }
       });
 
-      // Handle errors
-      child.on('error', (error) => {
+      // Handle process errors
+      child.on('error', (err) => {
         clearTimeout(timeoutId);
         resolve({
           success: false,
           stdout,
           stderr,
-          error: error.message,
-          errorCode: 'EXECUTION_FAILED'
+          error: `Failed to execute command: ${err.message}`,
+          errorCode: 'EXECUTION_ERROR'
         });
       });
     });
   }
 
   /**
-   * Normalize CLI output to common format
-   * @param {string} rawOutput
-   * @returns {string}
+   * Normalize CLI output
+   * Removes ANSI codes, extra whitespace, etc.
+   * @param {string} output - Raw CLI output
+   * @returns {string} - Normalized output
    */
-  normalizeOutput(rawOutput) {
-    if (!rawOutput) {
-      return '';
-    }
+  normalizeOutput(output) {
+    if (!output) return '';
 
-    // Remove any CLI-specific formatting artifacts
-    let normalized = rawOutput.trim();
-
-    // Remove ANSI color codes if present
-    normalized = normalized.replace(/\x1b\[[0-9;]*m/g, '');
-
-    // Remove any CLI headers or footers
-    // This may need adjustment based on actual Claude CLI output format
-    const lines = normalized.split('\n');
-    const filteredLines = lines.filter(line => {
-      const lineLower = line.toLowerCase();
-      return !lineLower.startsWith('claude cli') &&
-             !lineLower.startsWith('using model') &&
-             !lineLower.includes('tokens used');
-    });
-
-    return filteredLines.join('\n').trim();
-  }
-
-  /**
-   * Get the provider name
-   * @returns {string}
-   */
-  getProviderName() {
-    return this.providerName;
+    return output
+      // Remove ANSI color codes
+      .replace(/\x1b\[[0-9;]*m/g, '')
+      // Remove carriage returns
+      .replace(/\r/g, '')
+      // Normalize line endings
+      .replace(/\n{3,}/g, '\n\n')
+      // Trim whitespace
+      .trim();
   }
 }
 
-/**
- * Create a new ClaudeAdapter instance
- * @returns {ClaudeAdapter}
- */
-export function createClaudeAdapter() {
-  return new ClaudeAdapter();
+export function createGeminiAdapter() {
+  return new GeminiAdapter();
 }

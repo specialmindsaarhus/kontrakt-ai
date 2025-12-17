@@ -40,9 +40,15 @@ function App() {
       return;
     }
 
+    console.log('[FRONTEND] Starting analysis...');
+    console.log('[FRONTEND] Provider:', state.selectedProvider);
+    console.log('[FRONTEND] Document:', state.documentFile.path);
+    console.log('[FRONTEND] Prompt:', state.selectedPrompt);
+
     dispatch({ type: 'START_ANALYSIS' });
 
     try {
+      console.log('[FRONTEND] Calling window.electronAPI.runAnalysis()...');
       // Call backend via IPC
       const result = await window.electronAPI.runAnalysis({
         provider: state.selectedProvider,
@@ -52,6 +58,8 @@ function App() {
         outputFormats: state.outputPreferences.defaultFormats,
         branding: state.branding
       });
+      console.log('[FRONTEND] runAnalysis() completed successfully!');
+      console.log('[FRONTEND] Result:', result);
 
       dispatch({ type: 'ANALYSIS_SUCCESS', payload: result });
 

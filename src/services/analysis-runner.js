@@ -1,4 +1,6 @@
+import path from 'path';
 import { createClaudeAdapter } from '../adapters/claude-adapter.js';
+import { createGeminiAdapter } from '../adapters/gemini-adapter.js';
 import { getPromptPath, promptExists } from '../utils/prompt-loader.js';
 import { generateReport } from '../utils/report-generator.js';
 import { generateOutputPath } from '../utils/output-manager.js';
@@ -50,7 +52,7 @@ export async function runAnalysis(options, progressCallback = null) {
       outputFormats = [settings.output?.defaultFormat || 'pdf'],
       referencePath,
       customBranding,
-      timeout = 300000
+      timeout = 300000  // 5 minutes - Gemini CLI can take 2-3 minutes for analysis
     } = options;
 
     // Log analysis start
@@ -80,17 +82,22 @@ export async function runAnalysis(options, progressCallback = null) {
 
     // Step 3: Create adapter
     info('Creating CLI adapter', { provider });
+    console.log('[DEBUG] Creating adapter for provider:', provider);
     sendProgress(10, 0, 'Preparing CLI');
     const adapter = getAdapter(provider);
+    console.log('[DEBUG] Adapter created:', adapter.providerName);
 
     // Check if CLI is available
+    console.log('[DEBUG] Checking if CLI is available...');
     const isAvailable = await adapter.isAvailable();
+    console.log('[DEBUG] CLI available:', isAvailable);
     if (!isAvailable) {
       throw ErrorFactory.cliNotFound(provider);
     }
 
     // Step 4: Execute CLI analysis
     info('Executing CLI analysis');
+    console.log('[DEBUG] Calling adapter.execute() with timeout:', timeout);
     sendProgress(15, 0, 'Analyzing content');
     const cliResult = await adapter.execute({
       documentPath,
@@ -98,6 +105,7 @@ export async function runAnalysis(options, progressCallback = null) {
       referencePath,
       timeout
     });
+    console.log('[DEBUG] adapter.execute() returned. Success:', cliResult.success);
     sendProgress(60, 1, 'Analysis complete');
 
     if (!cliResult.success) {
@@ -220,11 +228,7 @@ function getAdapter(provider) {
     case 'claude':
       return createClaudeAdapter();
     case 'gemini':
-      // TODO: Implement Gemini adapter
-      throw ErrorFactory.generic(
-        'Gemini CLI adapter er ikke implementeret endnu',
-        ['Brug Claude CLI i stedet', 'Gemini support kommer i fremtidige versioner']
-      );
+      return createGeminiAdapter();
     case 'openai':
       // TODO: Implement OpenAI adapter
       throw ErrorFactory.generic(
@@ -242,7 +246,7 @@ function getAdapter(provider) {
  */
 async function generateReports({ cliResult, documentPath, clientName, promptName, outputFormats, customBranding }) {
   const reports = [];
-  const documentName = require('path').basename(documentPath, require('path').extname(documentPath));
+  const documentName = path.basename(documentPath, path.extname(documentPath));
 
   for (const format of outputFormats) {
     try {

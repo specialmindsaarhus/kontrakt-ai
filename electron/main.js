@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, session } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -35,6 +35,20 @@ function createWindow() {
 }
 
 app.on('ready', () => {
+  // Set Content Security Policy (only in production)
+  if (app.isPackaged) {
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+      callback({
+        responseHeaders: {
+          ...details.responseHeaders,
+          'Content-Security-Policy': [
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
+          ]
+        }
+      });
+    });
+  }
+
   createWindow();
   setupIPCHandlers();
 });
@@ -156,6 +170,14 @@ function setupIPCHandlers() {
         }
       );
 
+      // Check if analysis succeeded
+      if (!result.success) {
+        const error = new Error(result.userMessage || result.error || 'Analysis failed');
+        error.code = result.errorCode || 'ANALYSIS_FAILED';
+        error.suggestions = result.suggestions || 'Prøv igen eller tjek log filer.';
+        throw error;
+      }
+
       // Transform result format for frontend
       const reportPaths = {};
       if (result.reports && Array.isArray(result.reports)) {
@@ -168,14 +190,14 @@ function setupIPCHandlers() {
 
       return {
         output: result.cliResult?.output || '',
-        executionTime: result.executionTime,
+        executionTime: result.executionTime || 0,
         reportPaths,
         metadata: {
-          provider: result.metadata.provider,
+          provider: result.metadata?.provider || params.provider,
           providerVersion: result.cliResult?.version || 'unknown',
-          promptName: result.metadata.promptName,
-          documentName: result.metadata.documentPath?.split(/[/\\]/).pop() || '',
-          clientName: result.metadata.clientName,
+          promptName: result.metadata?.promptName || params.promptName,
+          documentName: result.metadata?.documentPath?.split(/[/\\]/).pop() || params.documentPath?.split(/[/\\]/).pop() || '',
+          clientName: result.metadata?.clientName || params.clientName || '',
           analysisDate: new Date().toISOString()
         }
       };
@@ -183,13 +205,13 @@ function setupIPCHandlers() {
     } catch (error) {
       console.error('Analysis failed:', error);
 
-      // Format error for renderer
-      throw {
-        code: error.code || 'UNKNOWN',
-        message: error.message,
-        suggestions: error.suggestions || 'Kontakt support.',
-        originalError: error.stack
-      };
+      // Create a proper Error object for IPC serialization
+      const ipcError = new Error(error.message || 'Analysis failed');
+      ipcError.code = error.code || 'UNKNOWN';
+      ipcError.suggestions = error.suggestions || 'Kontakt support.';
+      ipcError.originalStack = error.stack;
+
+      throw ipcError;
     }
   });
 

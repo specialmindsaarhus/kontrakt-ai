@@ -4,25 +4,64 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Status
 
-**Last Updated:** 2025-12-17 (Phase 7 - Frontend Specifications Complete)
+**Last Updated:** 2025-12-17 (Debugging Session - Gemini Integration Complete)
 **GitHub Repository:** https://github.com/specialmindsaarhus/kontrakt-ai.git
 
 **Completed Phases:**
-- ✅ Phase 0-7: Backend, design, and specifications complete
-- ⏳ **Next:** Phase 8 - Frontend Implementation
+- ✅ **Phase 0-8:** Complete application (backend + frontend + IPC)
+- ✅ **Gemini CLI Integration:** Full Gemini support with stdin input method
+- ⏳ **Next:** Final MVP testing + OpenAI CLI support
 
-**System Status:** Backend complete | Visual design approved | Frontend specs complete | Ready for implementation
+**System Status:** ✅ **GEMINI WORKING** - Ready for final end-to-end test
+
+**Recent Changes (Debugging Session 2025-12-17 Evening):**
+- ✅ Fixed IPC error serialization (plain objects → Error objects)
+- ✅ Fixed metadata undefined errors (added success check + optional chaining)
+- ✅ Created Gemini CLI adapter with stdin support
+- ✅ Fixed ES module errors (require → import)
+- ✅ Increased timeout to 5 minutes (Gemini takes ~2.7 min)
+- ✅ Added comprehensive debug logging throughout
+- ✅ Added Content-Security-Policy (production only)
+- ✅ Created TROUBLESHOOTING.md with all lessons learned
+
+**Recent Changes (Session 2025-12-17 Morning):**
+- ✅ Phase 8 Part 1: Secure IPC + State Management (commit `19c8adf`)
+  - Created electron/preload.js with contextBridge IPC API
+  - Updated electron/main.js with 7 IPC handlers
+  - Created src/context/AppContext.jsx with complete state management
+- ✅ Phase 8 Part 2: 15 React components + styling (commit `109096e`)
+  - Created all 15 components in src/components/
+  - Updated src/App.jsx with full integration
+  - Complete styling in src/index.css matching mockup
+- ✅ Bug Fix: listAvailablePrompts function name (commit `1dac0a2`)
+- ✅ Bug Fix: Progress callback + result format (commit `543726e`)
+  - Added progressCallback parameter to analysis-runner.js
+  - Fixed result format transformation in IPC handler
+  - Added progress updates at 8 key stages
 
 **What Works:**
-- ✅ Complete document analysis workflow (Claude CLI)
-- ✅ Multi-format report generation (PDF, Word, Markdown)
+- ✅ Complete Electron GUI with drag-and-drop
+- ✅ 3 Danish prompt types (Kontrakt, Manual, Compliance)
+- ✅ Real-time progress updates during analysis (3 stages)
+- ✅ Success animation (bouncy checkmark)
+- ✅ Error handling with Danish messages + retry
+- ✅ Export to Word, PDF, Markdown
+- ✅ Auto-save settings (debounced)
+- ✅ CLI provider detection (Claude Code, Gemini, OpenAI)
+- ✅ **Gemini CLI integration** (stdin method, ~3 min analysis)
+- ✅ Complete document analysis workflow
+- ✅ Multi-format report generation (PDF, DOCX, MD)
 - ✅ Automatic file organization by client and date
-- ✅ Persistent user settings
-- ✅ Enhanced error handling with Danish messages
-- ✅ Comprehensive logging system
+- ✅ Comprehensive error handling and debug logging
 
-**Known Issues:**
-- ⚠️ Claude CLI analysis takes 1-5 minutes (not a bug, just slow - need progress UI)
+**Known Issues & TODO:**
+- 🔴 **NEXT:** Final end-to-end test with Gemini (reports should generate now!)
+- ⚠️ Claude Code CLI has context bleed (sees CLAUDE.md) - use Gemini for now
+- ⚠️ Hamburger menu does nothing (settings modal not implemented)
+- ⚠️ Auto-start behavior (should be manual with Start button)
+- ⚠️ No ESC key to cancel analysis
+- 📋 **Future:** Leverage context bleed for personalized client analysis (chat feature)
+- 📋 **Future:** Add OpenAI CLI support
 
 For detailed phase completion summaries, see [HISTORY.md](./HISTORY.md).
 
@@ -45,13 +84,13 @@ For detailed phase completion summaries, see [HISTORY.md](./HISTORY.md).
 - `specs/ipc-contracts.spec.md` - Secure Electron IPC
 - `specs/user-flows.spec.md` - 10 user workflows
 
-**Frontend (To Be Implemented):**
-- `electron/preload.js` - IPC bridge (to implement)
-- `electron/main.js` - Main process with IPC handlers (to update)
-- `src/context/AppContext.jsx` - State management (to implement)
-- `src/components/*.jsx` - UI components (to implement)
-- `src/App.jsx` - Main app (to update)
-- `src/index.css` - Styling (to update)
+**Frontend (Complete):**
+- `electron/preload.js` - IPC bridge with contextBridge
+- `electron/main.js` - Main process with 7 IPC handlers
+- `src/context/AppContext.jsx` - State management (Context + useReducer)
+- `src/components/*.jsx` - 15 UI components
+- `src/App.jsx` - Main app with full integration
+- `src/index.css` - Complete styling matching mockup
 
 ## Resuming Development
 
@@ -93,7 +132,7 @@ Open `mockups/main-screen-v4.html` in browser to see approved design with all 6 
 3. **Report Layer** - PDF/Word/Markdown generation
 4. **Management Layer** - Settings, organization, logging
 5. **Orchestration Layer** - Analysis runner (complete workflow)
-6. **UI Layer** - Electron + React (to be implemented)
+6. **UI Layer** - Electron + React (complete)
 
 ### Data Flow
 
@@ -118,8 +157,8 @@ Project Files:
 │   ├── adapters/       # CLI adapters
 │   ├── services/       # Analysis runner
 │   ├── utils/          # Settings, output, logging, prompts, reports
-│   ├── context/        # React Context (to implement)
-│   └── components/     # React components (to implement)
+│   ├── context/        # React Context (AppContext.jsx)
+│   └── components/     # React components (15 components)
 ├── prompts/            # Danish system prompts
 ├── specs/              # Technical specifications
 ├── mockups/            # Visual design
@@ -232,61 +271,66 @@ npm run build:mac       # macOS .dmg installer
 - Button transitions: 400ms
 - All defined in mockup
 
-## Next Steps: Phase 8 Implementation
+## Next Steps: Testing & Feature Enhancements
 
-All specifications complete. Ready to implement frontend:
+Phase 8 (Frontend Implementation) is complete! MVP awaiting approval.
 
-### 1. Setup Secure Electron IPC
-- Implement `electron/preload.js` with contextBridge
-- Add IPC handlers in `electron/main.js`
-- Enable progress events for analysis
-- Security: contextIsolation, sandbox mode
+### FIRST PRIORITY: Full Flow Testing
 
-See: `specs/ipc-contracts.spec.md`
+**CRITICAL - Must complete before MVP approval:**
+- Test file upload via GUI (drag-and-drop and click)
+- Test complete workflow: Upload → Select prompt → Analysis → Reports generated
+- Verify all 3 output formats (PDF, Word, Markdown) are created correctly
+- Verify files are returned and accessible
+- Test with real franchise documents (contract, manual)
+- Validate organized output structure (client-name/YYYY-MM-DD/)
+- **Status:** MVP NOT yet approved by user - awaiting successful end-to-end testing
 
-### 2. Implement State Management
-- Create `src/context/AppContext.jsx`
-- Reducer with 20+ action types
-- Custom hooks (useAppState, useAppDispatch, useApp)
-- Settings persistence
+### Immediate TODO (User Requests - After MVP Approval)
 
-See: `specs/state-management.spec.md`
+1. **ESC Key to Cancel Analysis**
+   - Add ESC key handler during analysis
+   - Show confirmation dialog: "Vil du afslutte analyse?"
+   - Return to ready-to-start state (file uploaded, can restart or upload new)
+   - Implement cancel IPC method
 
-### 3. Build React Components
-- Implement 15 components per spec
-- Match mockup design exactly
-- Add animations (checkmark, spinner, progress)
-- Ensure accessibility
+2. **Manual Start Button**
+   - Remove auto-start behavior
+   - Add 'ready-to-start' state
+   - Show Start button inside drop zone when file + prompt selected
+   - User explicitly clicks to begin analysis
 
-See: `specs/ui-components.spec.md`
+3. **Settings Modal (Hamburger Menu)**
+   - Implement settings UI
+   - Branding configuration (company name, colors)
+   - Output preferences (default formats, organization)
+   - CLI provider preferences
 
-### 4. Integrate & Style
-- Connect components to Context
-- Wire up user workflows
-- Implement IPC communication
-- Add styling matching mockup
+4. **Better Time Estimates**
+   - Show estimated time based on file size
+   - Display remaining time during analysis
+   - Learn from past analyses for better predictions
 
-See: `specs/user-flows.spec.md` + `mockups/main-screen-v4.html`
+### Testing & Polish
 
-### 5. Testing
-- Unit tests: Reducer logic, file validation
-- Integration tests: Component interactions, IPC
-- E2E tests: Critical user workflows
+- Real document testing with franchise consultants
+- Performance optimization for large files
+- Error message refinement based on user feedback
+- Accessibility testing with screen readers
 
-**Design Reference:** `mockups/main-screen-v4.html`
-**Technical Reference:** `specs/*.spec.md`
-**Backend Integration:** Use `src/services/analysis-runner.js` via IPC
+**Current Status:** MVP implementation complete, awaiting full flow testing and user approval before adding features
 
-## User Workflow (End Goal)
+## User Workflow (Current)
 
 1. **Drop document** → File zone shows checkmark
 2. **Select prompt** → Button turns dark (selected)
-3. **Auto-start analysis** → Spinner + progress bars
-4. **View results** → Preview with formatted output
-5. **Export reports** → Download PDF/Word/Markdown
+3. **Auto-start analysis** → Spinner + progress bars (3 stages)
+4. **Success animation** → Bouncy green checkmark
+5. **Export reports** → Click Word/PDF/Markdown buttons
 6. **Organized output** → `output/client-name/YYYY-MM-DD/`
 
-**Key UX Decision:** Analysis auto-starts when file + prompt selected (no "Run" button needed).
+**Current UX:** Analysis auto-starts when file + prompt selected (no "Run" button).
+**Planned Change:** Manual Start button (user explicitly clicks to begin analysis).
 
 ## Additional Resources
 
