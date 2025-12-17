@@ -1,17 +1,347 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* ========== Import Inter Font from Google Fonts ========== */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
-body {
-  margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ========== CSS Custom Properties ========== */
+:root {
+  --color-dark: #0d1321;
+  --color-accent: #2563eb;
+  --color-success: #10b981;
+  --color-error: #dc2626;
+  --color-background: #FAFAFA;
+
+  --font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+
+  --transition-standard: 400ms;
 }
 
-code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+/* ========== Global Reset & Base Styles ========== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  background: var(--color-background);
+  color: var(--color-dark);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow: hidden;
+}
+
+button {
+  font-family: var(--font-family);
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+button:focus-visible {
+  outline: 2px solid var(--color-dark);
+  outline-offset: 2px;
+}
+
+/* ========== App Container ========== */
+.app-container {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 100px 48px 48px;
+  background: var(--color-background);
+}
+
+/* ========== App Header ========== */
+.app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 72px;  /* Expressive spacing */
+}
+
+/* ========== Logo ========== */
+.app-logo {
+  width: 48px;
+  height: 48px;
+  background: var(--color-dark);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+/* ========== Hamburger Menu ========== */
+.hamburger-menu {
+  background: transparent;
+  color: var(--color-dark);
+  opacity: 0.6;
+  transition: var(--transition-standard);
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hamburger-menu:hover {
+  opacity: 1;
+}
+
+/* ========== Drop Zone ========== */
+.drop-zone {
+  height: 360px;
+  border: 1px solid rgba(13, 19, 33, 0.1);
+  border-radius: 8px;
+  background: white;
+  transition: all var(--transition-standard);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.drop-zone:hover {
+  border-color: var(--color-dark);
+  border-width: 2px;
+  background: var(--color-background);
+}
+
+.drop-zone.hovering {
+  border-color: var(--color-dark);
+  border-width: 3px;
+  background: #f5f5f5;
+}
+
+.drop-zone.processing {
+  border-color: var(--color-dark);
+  border-width: 2px;
+  cursor: not-allowed;
+}
+
+.drop-zone.completed {
+  border-color: var(--color-dark);
+  border-width: 3px;
+  background: white;
+}
+
+.drop-zone.error {
+  border-color: var(--color-error);
+  border-width: 3px;
+  background: rgba(220, 38, 38, 0.02);
+}
+
+.drop-zone-icon {
+  color: var(--color-dark);
+  opacity: 0.7;
+}
+
+.drop-zone-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-dark);
+  letter-spacing: -0.01em;
+}
+
+/* Success checkmark animation */
+.success-icon {
+  color: var(--color-success);
+  animation: checkmarkPop 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes checkmarkPop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.3); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* Spinner animation */
+.spinner {
+  animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* ========== Prompt Buttons ========== */
+.prompt-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 48px;  /* Expressive spacing */
+  margin-bottom: 32px;
+}
+
+.prompt-buttons.hidden {
+  display: none;
+}
+
+.prompt-btn {
+  padding: 14px 28px;
+  background-color: white;
+  border: 1px solid rgba(13, 19, 33, 0.15);
+  border-radius: 5px;
+  color: var(--color-dark);
+  font-weight: 500;
+  font-size: 15px;
+  transition: all var(--transition-standard);
+}
+
+.prompt-btn:hover {
+  border-color: var(--color-dark);
+  border-width: 2px;
+  font-weight: 600;
+  padding: 13px 27px;  /* Adjust for border thickness */
+}
+
+.prompt-btn.selected {
+  background-color: var(--color-dark);
+  border-color: var(--color-dark);
+  border-width: 1px;
+  color: white;
+  font-weight: 600;
+}
+
+/* ========== Output Buttons ========== */
+.output-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 32px;
+  margin-bottom: 32px;
+}
+
+.output-buttons.hidden {
+  display: none;
+}
+
+.output-btn {
+  padding: 12px 24px;
+  background-color: white;
+  border: 1px solid rgba(13, 19, 33, 0.15);
+  border-radius: 5px;
+  color: var(--color-dark);
+  font-weight: 500;
+  font-size: 15px;
+  transition: all var(--transition-standard);
+}
+
+.output-btn:hover {
+  background-color: var(--color-dark);
+  border-color: var(--color-dark);
+  color: white;
+  font-weight: 600;
+}
+
+/* ========== Status Area ========== */
+.status-area {
+  min-height: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin-top: 64px;  /* Expressive spacing */
+}
+
+.status-message {
+  font-size: 16px;
+  color: var(--color-dark);
+  margin-bottom: 8px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.status-time {
+  font-size: 13px;
+  color: rgba(13, 19, 33, 0.5);
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+/* ========== Progress Indicator ========== */
+.status-progress {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.progress-stage {
+  width: 60px;
+  height: 3px;
+  background: rgba(13, 19, 33, 0.1);
+  border-radius: 2px;
+  position: relative;
+  overflow: hidden;
+}
+
+.progress-stage.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background: var(--color-dark);
+  animation: progressFill 0.4s ease-out forwards;
+}
+
+@keyframes progressFill {
+  from { width: 0%; }
+  to { width: 100%; }
+}
+
+/* ========== Error Message ========== */
+.error-message {
+  color: var(--color-error);
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  letter-spacing: -0.01em;
+  text-align: center;
+}
+
+.error-suggestions {
+  font-size: 14px;
+  color: rgba(13, 19, 33, 0.6);
+  line-height: 1.6;
+  margin-bottom: 16px;
+  text-align: center;
+  max-width: 400px;
+}
+
+.retry-btn {
+  padding: 10px 24px;
+  background-color: white;
+  border: 1px solid rgba(13, 19, 33, 0.15);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: var(--transition-standard);
+  color: var(--color-dark);
+  font-weight: 500;
+  font-size: 15px;
+}
+
+.retry-btn:hover {
+  background-color: var(--color-dark);
+  border-color: var(--color-dark);
+  color: white;
+  font-weight: 600;
+}
+
+/* ========== Utility Classes ========== */
+.hidden {
+  display: none !important;
 }

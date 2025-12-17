@@ -1,41 +1,134 @@
-import React from 'react';
+import { useEffect } from 'react';
+import { useAppState, useAppDispatch, useCanStartAnalysis } from './context/AppContext';
+import AppHeader from './components/AppHeader';
+import DropZone from './components/DropZone';
+import PromptSelector from './components/PromptSelector';
+import OutputButtons from './components/OutputButtons';
+import StatusArea from './components/StatusArea';
 
 function App() {
+  const state = useAppState();
+  const dispatch = useAppDispatch();
+  const canStartAnalysis = useCanStartAnalysis();
+
+  // Auto-start analysis when file + prompt + provider are ready
+  useEffect(() => {
+    if (canStartAnalysis) {
+      startAnalysis();
+    }
+  }, [canStartAnalysis]);
+
+  // ========== Event Handlers ==========
+
+  const handleMenuClick = () => {
+    // TODO: Open settings modal (future enhancement)
+    console.log('Menu clicked - settings modal not yet implemented');
+  };
+
+  const handlePromptSelect = (promptName) => {
+    dispatch({ type: 'SELECT_PROMPT', payload: promptName });
+  };
+
+  const handleFileUpload = (fileData) => {
+    dispatch({ type: 'UPLOAD_DOCUMENT', payload: fileData });
+  };
+
+  const startAnalysis = async () => {
+    // Validate we have everything needed
+    if (!state.selectedPrompt || !state.documentFile || !state.selectedProvider) {
+      console.error('Missing required data for analysis');
+      return;
+    }
+
+    dispatch({ type: 'START_ANALYSIS' });
+
+    try {
+      // Call backend via IPC
+      const result = await window.electronAPI.runAnalysis({
+        provider: state.selectedProvider,
+        documentPath: state.documentFile.path,
+        promptName: state.selectedPrompt,
+        clientName: state.clientName || 'Unnamed Client',
+        outputFormats: state.outputPreferences.defaultFormats,
+        branding: state.branding
+      });
+
+      dispatch({ type: 'ANALYSIS_SUCCESS', payload: result });
+
+      // Add to recent clients if clientName provided
+      if (state.clientName) {
+        dispatch({ type: 'ADD_RECENT_CLIENT', payload: state.clientName });
+      }
+
+    } catch (error) {
+      console.error('Analysis failed:', error);
+      dispatch({
+        type: 'ANALYSIS_ERROR',
+        payload: {
+          code: error.code || 'UNKNOWN',
+          message: error.message || 'En ukendt fejl opstod',
+          suggestions: error.suggestions || 'Kontakt support.',
+          originalError: error
+        }
+      });
+    }
+  };
+
+  const exportReport = async (format) => {
+    if (!state.analysisResult || !state.analysisResult.reportPaths[format]) {
+      console.error('No report available for format:', format);
+      return;
+    }
+
+    try {
+      const reportPath = state.analysisResult.reportPaths[format];
+
+      // Export via IPC
+      await window.electronAPI.exportReport({
+        format,
+        reportPath,
+        autoOpen: state.outputPreferences.autoOpen
+      });
+
+      console.log(`Exported ${format} report:`, reportPath);
+    } catch (error) {
+      console.error('Export failed:', error);
+      dispatch({
+        type: 'SET_ERROR',
+        payload: {
+          code: 'EXPORT_ERROR',
+          message: 'Kunne ikke eksportere rapport',
+          suggestions: 'Prøv igen eller kontakt support.',
+          originalError: error
+        }
+      });
+    }
+  };
+
+  const resetState = () => {
+    dispatch({ type: 'RESET_STATE' });
+  };
+
+  // ========== Render ==========
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Contract Reviewer
-          </h1>
-          <p className="mt-1 text-sm text-gray-600">
-            AI-powered franchise contract and manual review
-          </p>
-        </div>
-      </header>
+    <div className="app-container">
+      <AppHeader onMenuClick={handleMenuClick} />
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-xl font-semibold text-gray-800 mb-4">
-            Welcome to Contract Reviewer
-          </h2>
-          <p className="text-gray-600">
-            This application helps franchise consultants review contracts and manuals
-            using AI-powered analysis through LLM CLI tools.
-          </p>
+      <DropZone onFileUpload={handleFileUpload} />
 
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-            <p className="text-sm text-blue-800">
-              <strong>Status:</strong> Phase 1 - Basic setup complete!
-            </p>
-            <p className="text-xs text-blue-600 mt-2">
-              Next: Phase 2 - Claude CLI integration
-            </p>
-          </div>
-        </div>
-      </main>
+      <PromptSelector
+        selected={state.selectedPrompt}
+        onSelect={handlePromptSelect}
+        visible={['idle', 'prompt-selected'].includes(state.uiState)}
+      />
+
+      <OutputButtons
+        visible={state.uiState === 'completed'}
+        onExport={exportReport}
+      />
+
+      <StatusArea onRetry={resetState} />
     </div>
   );
 }
