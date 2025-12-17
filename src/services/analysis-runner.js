@@ -27,8 +27,15 @@ import { info, warn, error as logError, ErrorFactory, EnhancedError } from '../u
  * @param {number} options.timeout - CLI timeout in ms (default: 300000)
  * @returns {Promise<AnalysisResult>} Analysis result with report paths
  */
-export async function runAnalysis(options) {
+export async function runAnalysis(options, progressCallback = null) {
   const startTime = Date.now();
+
+  // Helper to send progress updates
+  const sendProgress = (percent, stage, message) => {
+    if (progressCallback && typeof progressCallback === 'function') {
+      progressCallback({ percent, stage, message });
+    }
+  };
 
   try {
     // Load settings
@@ -54,8 +61,12 @@ export async function runAnalysis(options) {
       clientName: clientName || 'N/A'
     });
 
+    // Send initial progress
+    sendProgress(0, 0, 'Starting analysis');
+
     // Step 1: Validate inputs
     info('Validating inputs');
+    sendProgress(5, 0, 'Validating inputs');
     await validateInputs({ provider, documentPath, promptName });
 
     // Step 2: Get prompt path
@@ -69,6 +80,7 @@ export async function runAnalysis(options) {
 
     // Step 3: Create adapter
     info('Creating CLI adapter', { provider });
+    sendProgress(10, 0, 'Preparing CLI');
     const adapter = getAdapter(provider);
 
     // Check if CLI is available
@@ -79,12 +91,14 @@ export async function runAnalysis(options) {
 
     // Step 4: Execute CLI analysis
     info('Executing CLI analysis');
+    sendProgress(15, 0, 'Analyzing content');
     const cliResult = await adapter.execute({
       documentPath,
       systemPromptPath: promptPath,
       referencePath,
       timeout
     });
+    sendProgress(60, 1, 'Analysis complete');
 
     if (!cliResult.success) {
       // Handle specific error codes
@@ -109,6 +123,7 @@ export async function runAnalysis(options) {
 
     // Step 5: Generate reports
     info('Generating reports', { formats: outputFormats });
+    sendProgress(65, 1, 'Generating reports');
     const reports = await generateReports({
       cliResult,
       documentPath,
@@ -117,6 +132,7 @@ export async function runAnalysis(options) {
       outputFormats,
       customBranding: customBranding || getBranding()
     });
+    sendProgress(90, 2, 'Finalizing');
 
     // Step 6: Update settings
     updateLastProvider(provider);
@@ -130,6 +146,9 @@ export async function runAnalysis(options) {
       totalTime,
       reportsGenerated: reports.length
     });
+
+    // Send final progress
+    sendProgress(100, 2, 'Complete');
 
     // Return result
     return {

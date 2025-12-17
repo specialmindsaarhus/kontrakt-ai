@@ -156,7 +156,29 @@ function setupIPCHandlers() {
         }
       );
 
-      return result;
+      // Transform result format for frontend
+      const reportPaths = {};
+      if (result.reports && Array.isArray(result.reports)) {
+        result.reports.forEach(report => {
+          if (report.format && report.path) {
+            reportPaths[report.format] = report.path;
+          }
+        });
+      }
+
+      return {
+        output: result.cliResult?.output || '',
+        executionTime: result.executionTime,
+        reportPaths,
+        metadata: {
+          provider: result.metadata.provider,
+          providerVersion: result.cliResult?.version || 'unknown',
+          promptName: result.metadata.promptName,
+          documentName: result.metadata.documentPath?.split(/[/\\]/).pop() || '',
+          clientName: result.metadata.clientName,
+          analysisDate: new Date().toISOString()
+        }
+      };
 
     } catch (error) {
       console.error('Analysis failed:', error);
