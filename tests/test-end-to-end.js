@@ -5,7 +5,7 @@
 
 import { runAnalysis } from '../src/services/analysis-runner.js';
 import { getReportStatistics } from '../src/utils/output-manager.js';
-import { loadSettings, resetSettings } from '../src/utils/settings-manager.js';
+import { loadSettings } from '../src/utils/settings-manager.js';
 import { existsSync } from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

@@ -47,7 +47,7 @@ export class ClaudeAdapter {
         // Fallback to force kill
         try {
           this._currentProcess.kill('SIGKILL');
-        } catch (_e) {
+        } catch {
           // Process might already be dead
         }
       }
@@ -267,7 +267,7 @@ export class ClaudeAdapter {
         if (child.stdin && !child.stdin.destroyed) {
           try {
             child.stdin.end();
-          } catch (_e) {
+          } catch {
             // Ignore errors if stdin already closed
           }
         }
@@ -335,7 +335,7 @@ export class ClaudeAdapter {
         if (child.stdin && !child.stdin.destroyed) {
           try {
             child.stdin.end();
-          } catch (_e) {
+          } catch {
             // Ignore errors if stdin already closed
           }
         }

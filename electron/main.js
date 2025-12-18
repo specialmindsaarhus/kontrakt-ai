@@ -70,7 +70,7 @@ app.on('activate', () => {
 function setupIPCHandlers() {
   // ===== Settings Management =====
 
-  ipcMain.handle('settings:load', async (event) => {
+  ipcMain.handle('settings:load', async (_event) => {
     try {
       const { loadSettings } = await import('../src/utils/settings-manager.js');
       const settings = await loadSettings();
@@ -114,7 +114,7 @@ function setupIPCHandlers() {
 
   // ===== CLI Provider Detection =====
 
-  ipcMain.handle('cli:detect-providers', async (event) => {
+  ipcMain.handle('cli:detect-providers', async (_event) => {
     try {
       const { detectAvailableCLIs } = await import('../src/utils/cli-detector.js');
       const providers = await detectAvailableCLIs();
@@ -128,7 +128,7 @@ function setupIPCHandlers() {
 
   // ===== Prompts Management =====
 
-  ipcMain.handle('prompts:get-available', async (event) => {
+  ipcMain.handle('prompts:get-available', async (_event) => {
     try {
       const { listAvailablePrompts } = await import('../src/utils/prompt-loader.js');
       const promptNames = await listAvailablePrompts();
@@ -282,9 +282,9 @@ function setupIPCHandlers() {
 
   // ===== Export Operations =====
 
-  ipcMain.handle('export:report', async (event, params) => {
+  ipcMain.handle('export:report', async (_event, params) => {
     try {
-      const { format, reportPath, autoOpen } = params;
+      const { reportPath, autoOpen } = params;
 
       // Validate report exists
       if (!fs.existsSync(reportPath)) {

@@ -1,7 +1,7 @@
 import { useAppState } from '../context/AppContext';
 import ProgressStage from './ProgressStage';
 
-export default function ProgressIndicator({ currentStage, totalStages = 3 }) {
+export default function ProgressIndicator({ currentStage }) {
   const state = useAppState();
   const overallProgress = state.analysisProgress || 0;
 

@@ -31,7 +31,10 @@
       "Bash(gemini:*)",
       "Bash(npx husky init)",
       "Bash(npm run lint)",
-      "Bash(npm run test:smoke:*)"
+      "Bash(npm run test:smoke:*)",
+      "Bash(npm run electron:dev:*)",
+      "Bash(timeout 10 cmd:*)",
+      "Bash(cat:*)"
     ]
   }
 }

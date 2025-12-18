@@ -10,7 +10,6 @@ vi.mock('../../src/utils/cli-detector.js', () => ({
   getCLIVersion: vi.fn()
 }));
 
-import { spawn } from 'child_process';
 import { isCLIAvailable, getCLIVersion } from '../../src/utils/cli-detector.js';
 
 describe('ClaudeAdapter', () => {

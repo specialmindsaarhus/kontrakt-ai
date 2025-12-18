@@ -236,7 +236,7 @@ export function cleanupOldReports(daysToKeep = 90) {
           if (remaining.length === 0) {
             unlinkSync(fullPath);
           }
-        } catch (error) {
+        } catch {
           // Directory not empty or couldn't delete, ignore
         }
       } else if (stats.isFile()) {

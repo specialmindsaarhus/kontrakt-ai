@@ -157,7 +157,7 @@ export async function runAnalysis(options, progressCallback = null) {
         currentProgress += 2;  // Increment by 2% every 3 seconds
         try {
           sendProgress(currentProgress, 1, 'Analyzing content');
-        } catch (_err) {
+        } catch {
           // If error during progress (e.g., cancellation), stop interval
           clearInterval(progressInterval);
         }

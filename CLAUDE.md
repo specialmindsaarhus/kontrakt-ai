@@ -112,6 +112,216 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - 📋 **Future:** Manual start button (optional - user prefers auto-start)
 - 📋 **Future:** Leverage Claude context bleed for personalized client analysis (chat feature)
 
+## macOS Integration To-Do
+
+**Status:** 🍎 Windows version complete, macOS compatibility pending
+**Estimated Effort:** 50-70 hours total (34-48 dev + 17-24 testing)
+**Priority:** Before macOS beta release
+
+### 🔴 Critical Issues (Must Fix Before macOS Release)
+
+**1. PATH Environment Not Loaded from User Shell Profile** (12 hours)
+- **Problem:** Electron spawns processes without loading `.zshrc`/`.bash_profile`
+- **Impact:** CLIs installed via Homebrew/npm not detected (affects 90%+ of users)
+- **Files:** `src/adapters/claude-adapter.js:236`, `src/adapters/gemini-adapter.js:240`
+- **Solution:** Load shell profile before spawning or manually build PATH with common locations
+- **Code locations:**
+  ```javascript
+  // Add to both adapters
+  const customEnv = {
+    ...process.env,
+    PATH: '/opt/homebrew/bin:/usr/local/bin:~/.npm-global/bin:' + process.env.PATH
+  };
+  ```
+
+**2. CLI Installation Location Diversity** (8 hours)
+- **Problem:** Different package managers install to different locations
+- **Impact:** `which claude` fails even when CLI properly installed
+- **Files:** `src/utils/cli-detector.js:42`
+- **Solution:** Fallback checks for common locations (/opt/homebrew/bin, /usr/local/bin, ~/.npm-global/bin)
+- **Homebrew paths:**
+  - Intel Mac: `/usr/local/bin/`
+  - Apple Silicon: `/opt/homebrew/bin/`
+
+**3. Apple Silicon (M1/M2/M3) Rosetta 2 Issues** (10 hours)
+- **Problem:** Architecture mismatch between Electron app and CLI tools
+- **Impact:** `spawn ENOEXEC` errors if ARM64 app spawns x86_64 CLI
+- **Files:** Build configuration in `package.json`
+- **Solution:** Build universal binary (ARM64 + x86_64)
+- **Build config:**
+  ```json
+  "mac": {
+    "target": [{ "target": "dmg", "arch": ["x64", "arm64"] }]
+  }
+  ```
+
+**4. Gatekeeper User Experience** (8 hours) - *Downgraded from Critical*
+- **Problem:** Unsigned apps trigger security warnings on first launch
+- **Impact:** Poor UX, users may abandon installation (not a technical blocker)
+- **Solution:** Code signing and notarization (Apple Developer Program $99/year)
+- **Notes:** App works after user bypasses Gatekeeper (right-click → Open)
+
+---
+
+### 🟡 High Priority Issues
+
+**5. Shell Profile Complexity (zsh vs bash)** (4 hours)
+- **Problem:** macOS uses zsh (Catalina+) or bash (older versions)
+- **Impact:** Need to detect which profile to load (`.zshrc` vs `.bash_profile`)
+- **Solution:** Check `process.env.SHELL` to determine profile path
+- **Implementation:**
+  ```javascript
+  function getUserShellProfile() {
+    const shell = process.env.SHELL || '/bin/zsh';
+    if (shell.includes('zsh')) return process.env.HOME + '/.zshrc';
+    if (shell.includes('bash')) return process.env.HOME + '/.bash_profile';
+    return null;
+  }
+  ```
+
+**6. First-Run CLI Authentication Prompts** (6 hours)
+- **Problem:** CLIs require `claude login` before first use, but app spawns non-interactively
+- **Impact:** Users see "auth required" error with no clear resolution path
+- **Files:** `src/adapters/claude-adapter.js:300`, `src/adapters/gemini-adapter.js:300`
+- **Solution:** Pre-flight authentication check with helpful Danish error messages
+- **Danish error:** "Claude CLI kræver autentificering. Åbn Terminal og kør: `claude login`"
+
+**7. File System Case Sensitivity** (3 hours)
+- **Problem:** APFS can be case-sensitive (developer option)
+- **Impact:** `Output/` vs `output/` treated as different directories
+- **Files:** `src/utils/output-manager.js:92`
+- **Solution:** Consistent lowercase directory names (already done in `sanitizeName`)
+- **Testing:** Test with case-sensitive APFS during development
+
+**8. Process Group Termination Differences** (8 hours)
+- **Problem:** Killing shell wrapper doesn't kill CLI subprocess on POSIX
+- **Impact:** Cancelled analysis keeps running in background, wastes API quota
+- **Files:** `src/adapters/claude-adapter.js:42`, `src/adapters/gemini-adapter.js:42`
+- **Solution:** Kill process group with negative PID: `process.kill(-pid, 'SIGKILL')`
+- **Process tree issue:**
+  ```bash
+  # Spawning with shell: true creates wrapper process
+  23456 /bin/sh -c "claude --print ..."  # kill(23456) only kills this
+    23457 claude --print ...              # This keeps running!
+  ```
+
+**9. Stdin Ctrl+C Reliability** (4 hours)
+- **Problem:** POSIX systems prefer SIGINT signal over stdin Ctrl+C character
+- **Impact:** Graceful cancellation may not work reliably
+- **Files:** `src/adapters/gemini-adapter.js:30`
+- **Solution:** Send SIGINT first (POSIX), fallback to stdin Ctrl+C (Windows)
+- **Implementation:**
+  ```javascript
+  if (process.platform !== 'win32') {
+    process.kill(this._currentProcess.pid, 'SIGINT');
+  } else {
+    this._currentProcess.stdin.write('\x03');
+  }
+  ```
+
+---
+
+### 🟢 Medium Priority Issues (Polish)
+
+**10. Home Directory Structure Differences** (4 hours)
+- **Problem:** Using `~/.contract-reviewer/` instead of macOS-standard `~/Library/Application Support/`
+- **Impact:** Low - works but violates macOS conventions
+- **Files:** `src/utils/settings-manager.js`, `src/utils/logger.js`
+- **Solution:** Platform-specific data directories
+- **macOS path:** `~/Library/Application Support/Contract Reviewer/`
+- **Windows path:** `~/AppData/Local/Contract Reviewer/`
+
+**11. Output Directory Organization Conventions** (3 hours)
+- **Problem:** Using `output/` in project directory instead of `~/Documents/`
+- **Impact:** Low - works but may confuse users about file locations
+- **Files:** `src/utils/output-manager.js`
+- **Solution:** Default to `~/Documents/Contract Reviewer/` on macOS
+- **Note:** Show output directory in settings so users know where files are saved
+
+**12. CLI Version Detection Reliability** (2 hours)
+- **Problem:** Assumes all CLIs support `--version` flag
+- **Impact:** Low - version detection fails but core functionality works
+- **Files:** `src/utils/cli-detector.js:88`
+- **Solution:** Make version detection non-fatal (return 'unknown' on error)
+- **Notes:** Version is metadata only, not critical for operation
+
+---
+
+### Testing Requirements for macOS
+
+**Hardware:**
+- ✅ Intel Mac (x86_64)
+- ✅ Apple Silicon Mac (ARM64 - M1/M2/M3)
+
+**CLI Installation Methods:**
+- ✅ Homebrew Intel (`/usr/local/bin`)
+- ✅ Homebrew Apple Silicon (`/opt/homebrew/bin`)
+- ✅ npm global install (`~/.npm-global/bin`)
+- ✅ Manual installation
+
+**System Configurations:**
+- ✅ zsh shell (modern macOS default)
+- ✅ bash shell (older macOS)
+- ✅ Case-sensitive APFS file system
+- ✅ Case-insensitive APFS (default)
+
+**Security Testing:**
+- ✅ Unsigned app (Gatekeeper bypass workflow)
+- ✅ Signed app (production release)
+- ✅ First-run CLI authentication flow
+- ✅ Process cancellation (ESC key during analysis)
+
+---
+
+### Implementation Priority Order
+
+**Before macOS beta release (38 hours):**
+1. ✅ Fix PATH environment loading (#1) - 12 hours
+2. ✅ Implement CLI location fallback checks (#2) - 8 hours
+3. ✅ Pre-flight CLI authentication check (#6) - 6 hours
+4. ✅ Fix process group termination (#8) - 8 hours
+5. ✅ Build universal binary (#3) - 4 hours
+
+**Before macOS production release (24 hours):**
+6. ✅ Code signing and notarization (#4) - 8 hours
+7. ✅ Platform-specific data directories (#10) - 4 hours
+8. ✅ Improve cancellation with SIGINT (#9) - 4 hours
+9. ✅ Shell profile detection (#5) - 4 hours
+10. ✅ Test on case-sensitive file system (#7) - 4 hours
+
+**Nice to have (9 hours):**
+11. Output to Documents folder (#11) - 3 hours
+12. Better version detection (#12) - 2 hours
+13. Homebrew cask distribution - 4 hours
+
+---
+
+### Additional macOS Enhancements
+
+**Homebrew Distribution** (8 hours)
+```bash
+# One-line install for users
+brew install --cask contract-reviewer
+```
+- Handles code signing automatically
+- Fixes PATH issues
+- Trusted by macOS users
+- Auto-updates support
+
+**Auto-Updater** (4 hours)
+```javascript
+// electron-updater package
+autoUpdater.checkForUpdatesAndNotify();
+```
+- App updates itself (like web app!)
+- User never manually downloads new version
+
+**Better Onboarding** (10 hours)
+- First-run wizard
+- CLI detection with install guides
+- Permissions setup (file access)
+- Quick tutorial
+
 For detailed phase completion summaries, see [HISTORY.md](./HISTORY.md).
 
 ## Key Files Reference

@@ -1,6 +1,5 @@
 import { ClaudeAdapter } from '../adapters/claude-adapter.js';
 import { existsSync, statSync } from 'fs';
-import path from 'path';
 
 /**
  * Validate a CLI request object
@@ -118,7 +117,7 @@ export async function isProviderAvailable(provider) {
   try {
     const adapter = getAdapter(provider);
     return await adapter.isAvailable();
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -132,7 +131,7 @@ export async function getProviderVersion(provider) {
   try {
     const adapter = getAdapter(provider);
     return await adapter.getVersion();
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -157,7 +156,7 @@ export async function runCLIAuto(request) {
           provider
         });
       }
-    } catch (error) {
+    } catch {
       // Skip to next provider
       continue;
     }

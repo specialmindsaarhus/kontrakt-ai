@@ -2,7 +2,6 @@ import { writeFileSync, existsSync, mkdirSync } from 'fs';
 import path from 'path';
 import PDFDocument from 'pdfkit';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
-import { marked } from 'marked';
 import { createWriteStream } from 'fs';
 
 /**
@@ -324,7 +323,7 @@ function addPDFContent(doc, config) {
  * Add footer to all PDF pages
  * @private
  */
-function addPDFFooter(doc, config) {
+function _addPDFFooter(doc, config) {
   const { branding } = config;
   const pageCount = doc.bufferedPageRange().count;
 
@@ -383,7 +382,7 @@ function parseMarkdownToSections(markdown) {
  * @private
  */
 function buildWordMetadata(config) {
-  const { metadata, cliResult, branding } = config;
+  const { metadata, branding } = config;
   const date = new Date().toLocaleDateString('da-DK', {
     year: 'numeric',
     month: 'long',

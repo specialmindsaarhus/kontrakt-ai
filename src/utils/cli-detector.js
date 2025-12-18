@@ -6,8 +6,8 @@ const execPromise = promisify(exec);
 
 /**
  * CLI provider definitions
- * NOTE: Order matters - first available will be auto-selected
- * TODO: Add ProviderSelector UI component to allow manual selection
+ * NOTE: Users can now manually select their preferred provider via ProviderSelector UI
+ * First available provider is auto-selected on initial load
  */
 const CLI_PROVIDERS = {
   gemini: {
@@ -44,7 +44,7 @@ async function commandExists(command) {
   try {
     await execPromise(`${checkCommand} ${command}`);
     return true;
-  } catch (error) {
+  } catch {
     return false;
   }
 }
@@ -68,7 +68,7 @@ async function getCommandVersion(command, versionFlag = '--version') {
 
     // If no version number found, return the first line
     return output.split('\n')[0];
-  } catch (error) {
+  } catch {
     return null;
   }
 }

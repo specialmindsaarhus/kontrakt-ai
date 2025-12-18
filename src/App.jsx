@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { useAppState, useAppDispatch, useCanStartAnalysis } from './context/AppContext';
 import AppHeader from './components/AppHeader';
 import DropZone from './components/DropZone';
@@ -17,7 +17,7 @@ function App() {
     if (canStartAnalysis) {
       startAnalysis();
     }
-  }, [canStartAnalysis]);
+  }, [canStartAnalysis, startAnalysis]);
 
   // ESC key to cancel analysis
   useEffect(() => {
@@ -69,7 +69,7 @@ function App() {
     dispatch({ type: 'UPLOAD_DOCUMENT', payload: fileData });
   };
 
-  const startAnalysis = async () => {
+  const startAnalysis = useCallback(async () => {
     // Validate we have everything needed
     if (!state.selectedPrompt || !state.documentFile || !state.selectedProvider) {
       console.error('Missing required data for analysis');
@@ -125,7 +125,7 @@ function App() {
         }
       });
     }
-  };
+  }, [state.selectedPrompt, state.documentFile, state.selectedProvider, state.clientName, state.outputPreferences.defaultFormats, state.branding, dispatch]);
 
   const exportReport = async (format) => {
     if (!state.analysisResult || !state.analysisResult.reportPaths[format]) {
