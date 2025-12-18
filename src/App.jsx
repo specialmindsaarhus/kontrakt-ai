@@ -12,44 +12,6 @@ function App() {
   const dispatch = useAppDispatch();
   const canStartAnalysis = useCanStartAnalysis();
 
-  // Auto-start analysis when file + prompt + provider are ready
-  useEffect(() => {
-    if (canStartAnalysis) {
-      startAnalysis();
-    }
-  }, [canStartAnalysis, startAnalysis]);
-
-  // ESC key to cancel analysis
-  useEffect(() => {
-    const handleKeyDown = async (event) => {
-      // Only handle ESC during analysis
-      if (event.key === 'Escape' && state.uiState === 'analysis-running') {
-        event.preventDefault();
-
-        // Show confirmation dialog
-        const confirmed = window.confirm('Vil du afbryde analysen?');
-
-        if (confirmed) {
-          try {
-            await window.electronAPI.cancelAnalysis();
-            console.log('Analysis cancelled by user');
-
-            // Reset to ready state (file still uploaded, can restart)
-            dispatch({ type: 'RESET_STATE' });
-          } catch (error) {
-            console.error('Failed to cancel analysis:', error);
-          }
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [state.uiState, dispatch]);
-
   // ========== Event Handlers ==========
 
   const handleMenuClick = () => {
@@ -161,6 +123,46 @@ function App() {
   const resetState = () => {
     dispatch({ type: 'RESET_STATE' });
   };
+
+  // ========== Effects ==========
+
+  // Auto-start analysis when file + prompt + provider are ready
+  useEffect(() => {
+    if (canStartAnalysis) {
+      startAnalysis();
+    }
+  }, [canStartAnalysis, startAnalysis]);
+
+  // ESC key to cancel analysis
+  useEffect(() => {
+    const handleKeyDown = async (event) => {
+      // Only handle ESC during analysis
+      if (event.key === 'Escape' && state.uiState === 'analysis-running') {
+        event.preventDefault();
+
+        // Show confirmation dialog
+        const confirmed = window.confirm('Vil du afbryde analysen?');
+
+        if (confirmed) {
+          try {
+            await window.electronAPI.cancelAnalysis();
+            console.log('Analysis cancelled by user');
+
+            // Reset to ready state (file still uploaded, can restart)
+            dispatch({ type: 'RESET_STATE' });
+          } catch (error) {
+            console.error('Failed to cancel analysis:', error);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [state.uiState, dispatch]);
 
   // ========== Render ==========
 
