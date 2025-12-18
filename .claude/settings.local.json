@@ -28,7 +28,10 @@
       "Bash(if [ -f \"$HOME/.contract-reviewer/settings.json\" ])",
       "Bash(then cat \"$HOME/.contract-reviewer/settings.json\")",
       "Bash(else echo \"No settings file yet\")",
-      "Bash(gemini:*)"
+      "Bash(gemini:*)",
+      "Bash(npx husky init)",
+      "Bash(npm run lint)",
+      "Bash(npm run test:smoke:*)"
     ]
   }
 }

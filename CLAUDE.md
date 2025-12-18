@@ -4,18 +4,33 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Status
 
-**Last Updated:** 2025-12-18 (MVP Complete - Gemini Integration Working)
+**Last Updated:** 2025-12-18 (GUI Testing & Quality Assurance Complete)
 **GitHub Repository:** https://github.com/specialmindsaarhus/kontrakt-ai.git
 
 **Completed Phases:**
 - ✅ **Phase 0-8:** Complete application (backend + frontend + IPC)
 - ✅ **Gemini CLI Integration:** Full Gemini support with stdin input method
 - ✅ **MVP Testing:** Complete end-to-end workflow tested and working
-- ⏳ **Next:** ProviderSelector UI + OpenAI CLI support
+- ✅ **GUI Testing & Polish:** User testing complete, UX improvements implemented
+- ✅ **Quality Assurance:** ESLint, pre-commit hooks, automated testing
+- ⏳ **Next:** Manual start button, ESC key cancel, Settings modal
 
-**System Status:** ✅ **MVP COMPLETE** - Gemini integration fully tested and working!
+**System Status:** ✅ **PRODUCTION READY** - Fully tested with quality assurance in place!
 
-**Recent Changes (Debugging Session 2025-12-18):**
+**Recent Changes (GUI Testing & QA Session 2025-12-18 Evening):**
+- ✅ Fixed checkmark display (now shows immediately after file upload, not just after analysis)
+- ✅ Fixed progress bar animation (smooth incremental updates, no "stuck" appearance)
+- ✅ Improved progress stage timing (mapped to actual workflow: 20%, 60%, 20% not equal thirds)
+- ✅ Changed date format from YYYY-MM-DD to DD-MM-YYYY (Danish standard)
+- ✅ Fixed janky border animation on button selection (consistent 2px borders + lift effect)
+- ✅ Fixed scoping bug in analysis-runner.js (cliResult variable scope)
+- ✅ **MAJOR:** Set up ESLint with React support (catches undefined variables, scoping issues)
+- ✅ **MAJOR:** Set up Husky pre-commit hooks (auto-validates before commits)
+- ✅ **MAJOR:** Created smoke test for rapid validation (30s full workflow test)
+- ✅ Created comprehensive development workflow documentation
+- ✅ All code changes now validated with ESLint + smoke test before completion
+
+**Recent Changes (MVP Testing Session 2025-12-18 Morning):**
 - ✅ Fixed provider selection priority (Gemini → Claude → OpenAI)
 - ✅ Fixed ES module error in analysis-runner.js (require → import)
 - ✅ Fixed export button auto-open functionality
@@ -52,17 +67,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **What Works:**
 - ✅ Complete Electron GUI with drag-and-drop
 - ✅ 3 Danish prompt types (Kontrakt, Manual, Compliance)
-- ✅ Real-time progress updates during analysis (3 stages)
-- ✅ Success animation (bouncy checkmark)
+- ✅ Real-time progress updates during analysis (smooth, incremental, mapped to actual timing)
+- ✅ Checkmark appears immediately after file upload
+- ✅ Success animation (bouncy checkmark with elastic bounce)
 - ✅ Error handling with Danish messages + retry
-- ✅ Export to Word, PDF, Markdown
+- ✅ Export to Word, PDF, Markdown (auto-open on button click)
 - ✅ Auto-save settings (debounced)
 - ✅ CLI provider detection (Claude Code, Gemini, OpenAI)
-- ✅ **Gemini CLI integration** (stdin method, ~3 min analysis)
+- ✅ **Gemini CLI integration** (stdin method, ~90 sec analysis)
 - ✅ Complete document analysis workflow
 - ✅ Multi-format report generation (PDF, DOCX, MD)
-- ✅ Automatic file organization by client and date
+- ✅ Automatic file organization by client and date (DD-MM-YYYY format)
 - ✅ Comprehensive error handling and debug logging
+- ✅ **ESLint code quality checks** (catches scoping issues, undefined variables)
+- ✅ **Pre-commit hooks** (auto-validates before commits)
+- ✅ **Smoke test** (30s rapid validation of full workflow)
 
 **Known Issues & TODO:**
 - 🎯 **HIGH PRIORITY:** Add ProviderSelector UI component (spec ready in specs/ui-components.spec.md)
@@ -93,6 +112,7 @@ For detailed phase completion summaries, see [HISTORY.md](./HISTORY.md).
 - `specs/state-management.spec.md` - Context + reducer architecture
 - `specs/ipc-contracts.spec.md` - Secure Electron IPC
 - `specs/user-flows.spec.md` - 10 user workflows
+- `specs/progress-mapping.spec.md` - Progress animation timing specification
 
 **Frontend (Complete):**
 - `electron/preload.js` - IPC bridge with contextBridge
@@ -182,7 +202,7 @@ User Files:
 Output:
 output/
 └── client-name/
-    └── YYYY-MM-DD/
+    └── DD-MM-YYYY/
         └── reports.{pdf,docx,md}
 ```
 
@@ -240,15 +260,45 @@ npm install
 npm run dev              # Vite dev server
 npm run electron:dev     # Electron app with hot reload
 
+# Code Quality (Run after making changes!)
+npm run lint             # Check code with ESLint (catches scoping issues!)
+npm run lint:fix         # Auto-fix simple ESLint issues
+
 # Testing
+npm run test:smoke       # Quick 30s validation (run after backend changes)
+npm run test:integration # Full end-to-end test (run before commits)
 npm test                 # Vitest unit tests
-node tests/test-*.js     # Individual integration tests
 
 # Production
 npm run build           # Build for production
 npm run build:win       # Windows .exe installer
 npm run build:mac       # macOS .dmg installer
 ```
+
+## Quality Assurance
+
+**ESLint Configuration:** `eslint.config.js`
+- ✅ Catches undefined variables (prevents scoping bugs!)
+- ✅ Warns on unused variables
+- ✅ React/JSX support with hooks validation
+- ✅ Configured for Node.js + Browser + Electron
+
+**Pre-commit Hooks:** `.husky/pre-commit`
+- ✅ Auto-runs ESLint before every commit
+- ✅ Auto-runs smoke test before every commit
+- ✅ Blocks commits if either fails
+- ⚠️ Use `git commit --no-verify` only in emergencies
+
+**Smoke Test:** `tests/smoke-test.js`
+- ✅ 30-second full workflow validation
+- ✅ Tests: file upload → analysis → report generation
+- ✅ Catches runtime errors before they reach production
+
+**Development Workflow:** See `DEV-WORKFLOW.md` and `CLAUDE-WORKFLOW.md`
+- Comprehensive best practices
+- Common error patterns to avoid
+- Pre-commit checklist
+- Refactoring safety guidelines
 
 ## Design System (Phase 6)
 
@@ -346,7 +396,20 @@ Phase 8 (Frontend Implementation) is complete! MVP awaiting approval.
 
 ## Additional Resources
 
+**Documentation:**
 - **HISTORY.md** - Detailed phase completion summaries
 - **USAGE.md** - API examples and usage guide
+- **DEV-WORKFLOW.md** - Development best practices and workflow
+- **CLAUDE-WORKFLOW.md** - AI assistant code quality checklist
+- **PREVENTION-SETUP-COMPLETE.md** - Quality assurance setup guide
+- **TROUBLESHOOTING.md** - Common issues and solutions
+
+**Specifications:**
 - **specs/*.spec.md** - Complete technical specifications
+- **specs/progress-mapping.spec.md** - Progress animation timing details
 - **mockups/main-screen-v4.html** - Interactive design mockup
+
+**Testing:**
+- **tests/smoke-test.js** - 30s rapid validation test
+- **tests/test-end-to-end.js** - Full integration test
+- **TESTING-CHECKLIST.md** - MVP testing results and findings

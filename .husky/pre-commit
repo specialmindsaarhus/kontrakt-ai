@@ -1,0 +1,30 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+echo "🔍 Running pre-commit checks..."
+echo ""
+
+# Run ESLint
+echo "📋 Checking code with ESLint..."
+npx eslint . --max-warnings 30 || {
+  echo ""
+  echo "❌ ESLint found issues. Please fix them before committing."
+  echo "💡 Tip: Run 'npx eslint . --fix' to auto-fix some issues"
+  exit 1
+}
+
+echo "✅ ESLint passed"
+echo ""
+
+# Run smoke test
+echo "🔥 Running smoke test..."
+npm run test:smoke || {
+  echo ""
+  echo "❌ Smoke test failed. Please fix the issues before committing."
+  echo "💡 Tip: Run 'npm run test:smoke' to see detailed error messages"
+  exit 1
+}
+
+echo ""
+echo "✅ All checks passed! Proceeding with commit..."
+echo ""

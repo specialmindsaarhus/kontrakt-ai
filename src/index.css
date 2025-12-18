@@ -191,7 +191,7 @@ button:focus-visible {
 .prompt-btn {
   padding: 14px 28px;
   background-color: white;
-  border: 1px solid rgba(13, 19, 33, 0.15);
+  border: 2px solid rgba(13, 19, 33, 0.15);
   border-radius: 5px;
   color: var(--color-dark);
   font-weight: 500;
@@ -201,15 +201,14 @@ button:focus-visible {
 
 .prompt-btn:hover {
   border-color: var(--color-dark);
-  border-width: 2px;
   font-weight: 600;
-  padding: 13px 27px;  /* Adjust for border thickness */
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(13, 19, 33, 0.1);
 }
 
 .prompt-btn.selected {
   background-color: var(--color-dark);
   border-color: var(--color-dark);
-  border-width: 1px;
   color: white;
   font-weight: 600;
 }
@@ -296,6 +295,16 @@ button:focus-visible {
   width: 100%;
   background: var(--color-dark);
   animation: progressFill 0.4s ease-out forwards;
+}
+
+.progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: var(--color-dark);
+  transition: width 0.5s ease-out;
+  border-radius: 2px;
 }
 
 @keyframes progressFill {

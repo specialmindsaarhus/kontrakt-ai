@@ -83,7 +83,7 @@ export async function runAnalysis(options, progressCallback = null) {
     // Step 3: Create adapter
     info('Creating CLI adapter', { provider });
     console.log('[DEBUG] Creating adapter for provider:', provider);
-    sendProgress(10, 0, 'Preparing CLI');
+    sendProgress(15, 0, 'Preparing CLI');
     const adapter = getAdapter(provider);
     console.log('[DEBUG] Adapter created:', adapter.providerName);
 
@@ -98,40 +98,60 @@ export async function runAnalysis(options, progressCallback = null) {
     // Step 4: Execute CLI analysis
     info('Executing CLI analysis');
     console.log('[DEBUG] Calling adapter.execute() with timeout:', timeout);
-    sendProgress(15, 0, 'Analyzing content');
-    const cliResult = await adapter.execute({
-      documentPath,
-      systemPromptPath: promptPath,
-      referencePath,
-      timeout
-    });
-    console.log('[DEBUG] adapter.execute() returned. Success:', cliResult.success);
-    sendProgress(60, 1, 'Analysis complete');
+    sendProgress(20, 1, 'Analyzing content');
 
-    if (!cliResult.success) {
-      // Handle specific error codes
-      if (cliResult.errorCode === 'AUTH_REQUIRED') {
-        throw ErrorFactory.authRequired(provider);
-      } else if (cliResult.errorCode === 'TIMEOUT') {
-        throw ErrorFactory.timeout(timeout);
-      } else if (cliResult.errorCode === 'FILE_NOT_FOUND') {
-        throw ErrorFactory.fileNotFound(documentPath);
+    // Start simulated progress updates during long CLI execution
+    // Mapped to Stage 1 range: 20-80% (most of the time is here)
+    let currentProgress = 20;
+    const progressInterval = setInterval(() => {
+      if (currentProgress < 70) {
+        currentProgress += 2;  // Increment by 2% every 3 seconds
+        sendProgress(currentProgress, 1, 'Analyzing content');
+      }
+    }, 3000);  // Update every 3 seconds
+
+    let cliResult;
+    try {
+      cliResult = await adapter.execute({
+        documentPath,
+        systemPromptPath: promptPath,
+        referencePath,
+        timeout
+      });
+      console.log('[DEBUG] adapter.execute() returned. Success:', cliResult.success);
+
+      // Clear interval and jump to 75%
+      clearInterval(progressInterval);
+      sendProgress(75, 1, 'Analysis complete');
+
+      if (!cliResult.success) {
+        // Handle specific error codes
+        if (cliResult.errorCode === 'AUTH_REQUIRED') {
+          throw ErrorFactory.authRequired(provider);
+        } else if (cliResult.errorCode === 'TIMEOUT') {
+          throw ErrorFactory.timeout(timeout);
+        } else if (cliResult.errorCode === 'FILE_NOT_FOUND') {
+          throw ErrorFactory.fileNotFound(documentPath);
+        }
+
+        throw ErrorFactory.generic(
+          cliResult.error || 'CLI analyse fejlede',
+          ['Tjek log filen for flere detaljer', 'Prøv med en anden CLI provider']
+        );
       }
 
-      throw ErrorFactory.generic(
-        cliResult.error || 'CLI analyse fejlede',
-        ['Tjek log filen for flere detaljer', 'Prøv med en anden CLI provider']
-      );
+      info('CLI analysis completed successfully', {
+        executionTime: cliResult.executionTime,
+        outputLength: cliResult.output?.length || 0
+      });
+    } catch (err) {
+      clearInterval(progressInterval);
+      throw err;
     }
-
-    info('CLI analysis completed successfully', {
-      executionTime: cliResult.executionTime,
-      outputLength: cliResult.output?.length || 0
-    });
 
     // Step 5: Generate reports
     info('Generating reports', { formats: outputFormats });
-    sendProgress(65, 1, 'Generating reports');
+    sendProgress(80, 2, 'Generating reports');
     const reports = await generateReports({
       cliResult,
       documentPath,
@@ -140,7 +160,7 @@ export async function runAnalysis(options, progressCallback = null) {
       outputFormats,
       customBranding: customBranding || getBranding()
     });
-    sendProgress(90, 2, 'Finalizing');
+    sendProgress(95, 2, 'Finalizing');
 
     // Step 6: Update settings
     updateLastProvider(provider);

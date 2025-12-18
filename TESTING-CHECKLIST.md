@@ -28,11 +28,11 @@ npm run electron:dev
 ### 2. Initial State
 
 **Visual checks:**
-- [ ✓] App header shows "Kontrakt Revisor" title
+- [ x] App header shows "Kontrakt Revisor" title: Contract Reviewer
 - [ x] Hamburger menu icon visible (top left): visible top right, DO NOT work
 - [✓ ] Drop zone shows "Træk dokument hertil" message
 - [ ✓] 3 prompt buttons visible: "Kontrakt", "Manual", "Compliance"
-- [ x] All prompt buttons are light/unselected: compliance is selected from load
+- [ x] All prompt buttons are light/unselected: kontrakt is selected from load
 - [ x] Status area shows: "Klar til at starte": it should not show this, so this is a good thing
 - [ ✓] Export buttons (Word/PDF/Markdown) are disabled/hidden
 
@@ -46,9 +46,9 @@ npm run electron:dev
 **Action:** Drag a document file onto the drop zone
 
 **Expected:**
-- [x ] Drop zone shows green checkmark icon
+- [x ] Drop zone shows green checkmark icon: this does not happen before the analysis is done
 - [✓ ] Document filename displays below checkmark
-- [ ✓] Status message updates
+- [ ✓ ] Status message updates
 - [ ✓] Document can be dropped successfully
 
 **✓ PASS / ✗ FAIL** ___
@@ -78,7 +78,7 @@ npm run electron:dev
 - [ ✓] Selected button turns dark blue (`background: #2563eb`)
 - [✓ ] Selected button border becomes thicker (3px): the animation over tothicker border is not good, jancky
 - [✓ ] Other buttons remain light
-- [x ] Status updates: where should this be?
+- [x ] Status updates: where should this be? im not sure it should actually show any place
 
 **✓ PASS / ✗ FAIL** ___
 **Selected Prompt:** _______________
@@ -95,8 +95,9 @@ npm run electron:dev
   - Stage 1: "Validerer dokument": didnt see this part
   - Stage 2: "Analyserer indhold": it got stuck on this one!
   - Stage 3: "Genererer rapporter"
-- [ ] Progress updates in real-time:
-- [ ] Each stage shows percentage (0-100%)
+  it does go through the 3 stages. the first part being filled very fast and then nothing happens in the second part while the analysis is running. this could be misunderstood as the analysis has stopped. the animation should bemore fuint, with litle movement to show development/ovement in the analysis
+- [x ] Progress updates in real-time: it might be, but it sont show up like taht to the user
+- [x ] Each stage shows percentage (0-100%): it shows a line were it fills up in procent. this is fine
 
 **✓ PASS / ✗ FAIL** ___
 **Time taken:** ________ minutes
@@ -107,11 +108,11 @@ npm run electron:dev
 ### 7. Progress Updates
 
 **During analysis, verify:**
-- [ ] Progress bar animates smoothly
-- [ ] Stage labels update correctly (3 stages)
-- [ ] Percentage increases from 0% to 100%
-- [ ] Status messages are in Danish
-- [ ] UI remains responsive (no freezing)
+- [✓  ] Progress bar animates smoothly
+- [✓  ] Stage labels update correctly (3 stages)
+- [x ] Percentage increases from 0% to 100%
+- [ ✓ ] Status messages are in Danish
+- [? ] UI remains responsive (no freezing)
 
 **✓ PASS / ✗ FAIL** ___
 **Notes:** _______________________________________________
@@ -121,11 +122,11 @@ npm run electron:dev
 ### 8. Success State
 
 **After analysis completes:**
-- [ ] Green checkmark appears with bouncy animation (600ms elastic)
+- [ ✓ ] Green checkmark appears with bouncy animation (600ms elastic)
 - [ ] Success message: "Analyse gennemført!"
-- [ ] Export buttons (Word/PDF/Markdown) become enabled
-- [ ] Export buttons are styled correctly (light with borders)
-- [ ] Analysis result is visible/accessible
+- [✓ ] Export buttons (Word/PDF/Markdown) become enabled
+- [✓  ] Export buttons are styled correctly (light with borders)
+- [✓  ] Analysis result is visible/accessible
 
 **✓ PASS / ✗ FAIL** ___
 **Notes:** _______________________________________________
@@ -137,10 +138,10 @@ npm run electron:dev
 **Action:** Click "Exportér Word" button
 
 **Expected:**
-- [ ] Word file (`.docx`) is generated
-- [ ] File is saved to `output/[client-name]/YYYY-MM-DD/`
-- [ ] File opens in Word (if auto-open enabled)
-- [ ] Document contains:
+- [v ] Word file (`.docx`) is generated
+- [✓  ] File is saved to `output/[client-name]/YYYY-MM-DD/`
+- [✓  ] File opens in Word (if auto-open enabled)
+- [ ✓ ] Document contains:
   - Cover page with branding
   - Client name
   - Analysis date
@@ -159,10 +160,10 @@ npm run electron:dev
 **Action:** Click "Exportér PDF" button
 
 **Expected:**
-- [ ] PDF file is generated
-- [ ] File is saved to `output/[client-name]/YYYY-MM-DD/`
-- [ ] File opens in PDF reader (if auto-open enabled)
-- [ ] PDF contains:
+- [ ✓ ] PDF file is generated
+- [✓  ] File is saved to `output/[client-name]/YYYY-MM-DD/`
+- [✓  ] File opens in PDF reader (if auto-open enabled)
+- [✓  ] PDF contains:
   - Professional cover page
   - All content from analysis
   - Proper formatting
@@ -179,9 +180,9 @@ npm run electron:dev
 **Action:** Click "Exportér Markdown" button
 
 **Expected:**
-- [ ] Markdown file (`.md`) is generated
-- [ ] File is saved to `output/[client-name]/YYYY-MM-DD/`
-- [ ] File contains:
+- [✓  ] Markdown file (`.md`) is generated
+- [ ✓ ] File is saved to `output/[client-name]/YYYY-MM-DD/`
+- [ ✓ ] File contains:
   - Metadata header (YAML front matter)
   - Full analysis in markdown format
   - Proper markdown syntax (headings, lists, etc.)
@@ -205,10 +206,10 @@ output/
         └── report.md
 ```
 
-- [ ] Client folder created correctly
-- [ ] Date folder uses YYYY-MM-DD format
-- [ ] All 3 files are present
-- [ ] Files are named consistently
+- [✓  ] Client folder created correctly
+- [ ✓ ] Date folder uses YYYY-MM-DD format: But it should do DD-MM-YYYY
+- [ ✓ ] All 3 files are present
+- [✓  ] Files are named consistently
 
 **✓ PASS / ✗ FAIL** ___
 **Actual path:** _______________________________________________

@@ -73,6 +73,11 @@ export default function DropZone({ onFileUpload }) {
 
   // Get dynamic icon based on state
   const getIcon = () => {
+    // Show checkmark if file is uploaded (even before analysis)
+    if (state.documentFile && !isDragOver && state.uiState !== 'analysis-running' && state.uiState !== 'error') {
+      return <CheckCircle size={56} strokeWidth={2} className="success-icon" />;
+    }
+
     switch (state.uiState) {
       case 'idle':
       case 'prompt-selected':
@@ -117,7 +122,7 @@ export default function DropZone({ onFileUpload }) {
 
     if (isDragOver) classes.push('hovering');
     else if (state.uiState === 'analysis-running') classes.push('processing');
-    else if (state.uiState === 'completed') classes.push('completed');
+    else if (state.uiState === 'completed' || state.documentFile) classes.push('completed');
     else if (state.uiState === 'error') classes.push('error');
 
     return classes.join(' ');

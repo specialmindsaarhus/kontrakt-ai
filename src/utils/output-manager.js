@@ -38,13 +38,13 @@ function sanitizeName(name) {
 /**
  * Get date-based folder name
  * @param {Date} date - Date object
- * @returns {string} Folder name (e.g., "2025-12-16")
+ * @returns {string} Folder name (e.g., "18-12-2025")
  */
 function getDateFolderName(date = new Date()) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
+  return `${day}-${month}-${year}`;
 }
 
 /**

@@ -12,7 +12,12 @@
     "electron:build": "vite build && electron-builder",
     "build:win": "npm run build && electron-builder --win --x64",
     "build:mac": "npm run build && electron-builder --mac",
-    "test": "vitest"
+    "test": "vitest",
+    "test:smoke": "node tests/smoke-test.js",
+    "test:integration": "node tests/test-end-to-end.js",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prepare": "husky"
   },
   "keywords": [
     "franchise",
@@ -36,11 +41,16 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
     "@testing-library/react": "^14.1.2",
     "@vitejs/plugin-react": "^4.2.1",
     "autoprefixer": "^10.4.16",
     "concurrently": "^8.2.2",
     "electron-builder": "^24.9.1",
+    "eslint": "^9.39.2",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "husky": "^9.1.7",
     "postcss": "^8.4.33",
     "tailwindcss": "^3.4.1",
     "vite": "^5.0.10",

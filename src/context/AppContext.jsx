@@ -97,7 +97,7 @@ function appReducer(state, action) {
       };
 
     // ========== CLI Provider Actions ==========
-    case 'LOAD_PROVIDERS_SUCCESS':
+    case 'LOAD_PROVIDERS_SUCCESS': {
       const providers = action.payload;  // CLIProviderInfo[]
       const firstAvailable = providers.find(p => p.available);
 
@@ -106,6 +106,7 @@ function appReducer(state, action) {
         availableProviders: providers,
         selectedProvider: firstAvailable ? firstAvailable.name : null
       };
+    }
 
     case 'SELECT_PROVIDER':
       return {
@@ -165,7 +166,7 @@ function appReducer(state, action) {
         }
       };
 
-    case 'ADD_RECENT_CLIENT':
+    case 'ADD_RECENT_CLIENT': {
       const newClient = action.payload;
       const updatedRecent = [
         newClient,
@@ -176,6 +177,7 @@ function appReducer(state, action) {
         ...state,
         recentClients: updatedRecent
       };
+    }
 
     case 'UPDATE_OUTPUT_PREFERENCES':
       return {
