@@ -5,6 +5,52 @@ This file contains detailed completion summaries for all phases of the Contract 
 For current project status and active development information, see [CLAUDE.md](./CLAUDE.md).
 
 ---
+## MVP Testing & Bug Fixes (2025-12-18)
+
+**Session Goal:** Test Gemini integration end-to-end and fix any blocking issues
+
+**Issues Found & Fixed:**
+
+1. **Provider Selection Issue**
+   - **Problem:** App always selected Claude instead of Gemini (first available provider)
+   - **Root Cause:** Provider order in `cli-detector.js` (Claude → Gemini → OpenAI)
+   - **Fix:** Reordered providers to Gemini → Claude → OpenAI
+   - **Temporary Solution:** Hardcoded order (awaiting ProviderSelector UI component)
+   - **Files Changed:** `src/utils/cli-detector.js`
+
+2. **ES Module Error in Report Generation**
+   - **Problem:** All 3 report formats failed with "require is not defined"
+   - **Root Cause:** `analysis-runner.js` used `require('path')` instead of imported `path` module
+   - **Fix:** Changed `require('path').basename()` to `path.basename()` (lines 266-268)
+   - **Files Changed:** `src/services/analysis-runner.js`
+
+3. **Export Button Not Opening Files**
+   - **Problem:** Clicking PDF/Word/Markdown buttons did nothing
+   - **Root Cause:** `autoOpen` parameter passed from user preferences (was `false`)
+   - **Fix:** Changed export handler to always pass `autoOpen: true` when button is clicked
+   - **Files Changed:** `src/App.jsx`
+
+**Testing Results:**
+- ✅ **Gemini Integration:** Working perfectly
+- ✅ **Execution Time:** 72 seconds (1:12)
+- ✅ **Analysis Output:** 6142 characters
+- ✅ **Reports Generated:**
+  - PDF: 6.7 KB (`output/unnamed-client/2025-12-18/sample-contract-*.pdf`)
+  - DOCX: 10 KB (`output/unnamed-client/2025-12-18/sample-contract-*.docx`)
+  - MD: 6.3 KB (`output/unnamed-client/2025-12-18/sample-contract-*.md`)
+- ✅ **Export Buttons:** All 3 formats open correctly in default applications
+- ✅ **File Organization:** Proper structure (client/date folders)
+
+**Additional Work:**
+- 📋 Added ProviderSelector component spec to `specs/ui-components.spec.md`
+- 📋 Updated component architecture diagram (16 components now)
+- 📋 Marked as HIGH PRIORITY for next implementation phase
+
+**Outcome:** ✅ **MVP APPROVED** - Core functionality tested and working!
+
+---
+
+
 
 ## Phase 1 Completion Summary
 

@@ -6,21 +6,23 @@ const execPromise = promisify(exec);
 
 /**
  * CLI provider definitions
+ * NOTE: Order matters - first available will be auto-selected
+ * TODO: Add ProviderSelector UI component to allow manual selection
  */
 const CLI_PROVIDERS = {
-  claude: {
-    name: 'claude',
-    displayName: 'Claude CLI',
-    command: 'claude',
-    versionFlag: '--version',
-    installUrl: 'https://claude.ai/cli'
-  },
   gemini: {
     name: 'gemini',
     displayName: 'Gemini CLI',
     command: 'gemini',
     versionFlag: '--version',
     installUrl: 'https://ai.google.dev/gemini-api/docs/cli'
+  },
+  claude: {
+    name: 'claude',
+    displayName: 'Claude CLI',
+    command: 'claude',
+    versionFlag: '--version',
+    installUrl: 'https://claude.ai/cli'
   },
   openai: {
     name: 'openai',

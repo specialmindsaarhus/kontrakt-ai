@@ -21,6 +21,7 @@ App (root)
 │   └── HamburgerMenu
 ├── DropZone
 ├── PromptSelector
+├── ProviderSelector (TODO: Not yet implemented)
 ├── OutputButtons
 └── StatusArea
     ├── StatusMessage
@@ -526,7 +527,169 @@ Individual button for prompt selection.
 
 ---
 
-## 8. OutputButtons Component
+## 8. ProviderSelector Component
+
+**File:** `src/components/ProviderSelector.jsx`
+
+**Status:** ⚠️ TODO - Not yet implemented (temporary workaround: providers are auto-selected in order: Gemini → Claude → OpenAI)
+
+Dropdown or button group for selecting CLI provider (Gemini, Claude, ChatGPT).
+
+### Purpose
+Allow users to manually choose which LLM CLI to use for analysis. Currently, the app auto-selects the first available provider, which prevents users from choosing between installed CLIs.
+
+### Props
+```javascript
+{
+  // Available CLI providers from backend
+  availableProviders: Array<{
+    name: string,           // 'claude' | 'gemini' | 'openai'
+    displayName: string,    // 'Claude CLI' | 'Gemini CLI' | 'OpenAI CLI'
+    available: boolean,     // Whether CLI is installed
+    version: string | null  // CLI version if available
+  }>,
+
+  // Currently selected provider
+  selected: string | null,  // 'claude' | 'gemini' | 'openai'
+
+  // Selection callback
+  onSelect: (providerName: string) => void,
+
+  // Visibility toggle
+  visible: boolean
+}
+```
+
+### State
+None (controlled component)
+
+### Structure (Option A: Dropdown)
+```jsx
+<div className={`provider-selector ${!props.visible && 'hidden'}`}>
+  <label className="provider-label">LLM Provider</label>
+  <select
+    value={props.selected || ''}
+    onChange={(e) => props.onSelect(e.target.value)}
+    className="provider-dropdown"
+  >
+    {props.availableProviders
+      .filter(p => p.available)
+      .map(provider => (
+        <option key={provider.name} value={provider.name}>
+          {provider.displayName} {provider.version && `(v${provider.version})`}
+        </option>
+      ))
+    }
+  </select>
+</div>
+```
+
+### Structure (Option B: Button Group - Recommended)
+```jsx
+<div className={`provider-buttons ${!props.visible && 'hidden'}`}>
+  {props.availableProviders
+    .filter(p => p.available)
+    .map(provider => (
+      <ProviderButton
+        key={provider.name}
+        label={provider.displayName.replace(' CLI', '')}  // "Gemini" instead of "Gemini CLI"
+        providerName={provider.name}
+        selected={props.selected === provider.name}
+        version={provider.version}
+        onClick={() => props.onSelect(provider.name)}
+      />
+    ))
+  }
+</div>
+```
+
+### Styling (Button Group)
+```css
+.provider-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.provider-btn {
+  background-color: white;
+  border: 1px solid rgba(13, 19, 33, 0.15);
+  color: #0d1321;
+  font-weight: 500;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 400ms;
+  font-size: 14px;
+}
+
+.provider-btn:hover {
+  border-color: #0d1321;
+  border-width: 2px;
+  font-weight: 600;
+}
+
+.provider-btn.selected {
+  background-color: #0d1321;
+  border-color: #0d1321;
+  color: white;
+  font-weight: 600;
+}
+
+.provider-btn .version {
+  font-size: 11px;
+  opacity: 0.6;
+  margin-left: 4px;
+}
+```
+
+### Placement
+- Position: Below PromptSelector, above OutputButtons
+- Show when: `uiState === 'idle' || uiState === 'prompt-selected'`
+- Hide when: Analysis is running or completed
+
+### Behavior
+- Only show providers that are `available: true`
+- If only one provider is available, can optionally hide selector
+- Selection persists across sessions (saved in settings)
+- Show provider version in subtle text (e.g., "Gemini v1.0.0")
+
+### Error Handling
+If no providers are available:
+```jsx
+<div className="provider-error">
+  <AlertTriangle size={20} />
+  <p>Ingen LLM CLI fundet. Installer mindst én:</p>
+  <ul>
+    <li><a href="https://ai.google.dev/gemini-api/docs/cli">Gemini CLI</a></li>
+    <li><a href="https://claude.ai/cli">Claude CLI</a></li>
+    <li><a href="https://platform.openai.com/docs">OpenAI CLI</a></li>
+  </ul>
+</div>
+```
+
+### Integration with App State
+Update `src/App.jsx`:
+```jsx
+<ProviderSelector
+  availableProviders={state.availableProviders}
+  selected={state.selectedProvider}
+  onSelect={(provider) => dispatch({ type: 'SELECT_PROVIDER', payload: provider })}
+  visible={['idle', 'prompt-selected'].includes(state.uiState)}
+/>
+```
+
+### Priority
+**High** - Current workaround (auto-selection) prevents users from choosing between installed CLIs. This component is needed before multi-provider support is truly functional.
+
+---
+
+## 10. OutputButtons Component
+
+---
+
+## 10. OutputButtons Component
 
 **File:** `src/components/OutputButtons.jsx`
 
@@ -557,7 +720,7 @@ Same as `prompt-buttons` layout (flex, gap, centered)
 
 ---
 
-## 9. OutputButton Component
+## 10. OutputButton Component
 
 **File:** `src/components/OutputButton.jsx`
 
@@ -604,7 +767,7 @@ Individual export button.
 
 ---
 
-## 10. StatusArea Component
+## 11. StatusArea Component
 
 **File:** `src/components/StatusArea.jsx`
 
@@ -682,7 +845,7 @@ Note: NO "Færdig" text - animation is the feedback
 
 ---
 
-## 11. StatusMessage Component
+## 12. StatusMessage Component
 
 **File:** `src/components/StatusMessage.jsx`
 
@@ -717,7 +880,7 @@ None (stateless component)
 
 ---
 
-## 12. StatusTime Component
+## 13. StatusTime Component
 
 **File:** `src/components/StatusTime.jsx`
 
@@ -749,7 +912,7 @@ None (stateless component)
 
 ---
 
-## 13. ProgressIndicator Component
+## 14. ProgressIndicator Component
 
 **File:** `src/components/ProgressIndicator.jsx`
 
@@ -818,7 +981,7 @@ Each stage animates in with `progressFill` animation:
 
 ---
 
-## 14. ProgressStage Component
+## 15. ProgressStage Component
 
 **File:** `src/components/ProgressStage.jsx`
 
@@ -841,7 +1004,7 @@ None (stateless component)
 
 ---
 
-## 15. ErrorMessage Component
+## 16. ErrorMessage Component
 
 **File:** `src/components/ErrorMessage.jsx`
 

@@ -263,8 +263,8 @@ async function generateReports({ cliResult, documentPath, clientName, promptName
         outputPath,
         cliResult,
         metadata: {
-          originalFileName: require('path').basename(documentPath),
-          originalFormat: require('path').extname(documentPath).substring(1),
+          originalFileName: path.basename(documentPath),
+          originalFormat: path.extname(documentPath).substring(1),
           clientName,
           documentType: getDocumentType(promptName)
         },

@@ -91,11 +91,11 @@ function App() {
     try {
       const reportPath = state.analysisResult.reportPaths[format];
 
-      // Export via IPC
+      // Export via IPC (always open when user clicks button)
       await window.electronAPI.exportReport({
         format,
         reportPath,
-        autoOpen: state.outputPreferences.autoOpen
+        autoOpen: true
       });
 
       console.log(`Exported ${format} report:`, reportPath);
