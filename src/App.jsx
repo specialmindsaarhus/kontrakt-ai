@@ -3,6 +3,7 @@ import { useAppState, useAppDispatch, useCanStartAnalysis } from './context/AppC
 import AppHeader from './components/AppHeader';
 import DropZone from './components/DropZone';
 import PromptSelector from './components/PromptSelector';
+import ProviderSelector from './components/ProviderSelector';
 import OutputButtons from './components/OutputButtons';
 import StatusArea from './components/StatusArea';
 
@@ -18,6 +19,37 @@ function App() {
     }
   }, [canStartAnalysis]);
 
+  // ESC key to cancel analysis
+  useEffect(() => {
+    const handleKeyDown = async (event) => {
+      // Only handle ESC during analysis
+      if (event.key === 'Escape' && state.uiState === 'analysis-running') {
+        event.preventDefault();
+
+        // Show confirmation dialog
+        const confirmed = window.confirm('Vil du afbryde analysen?');
+
+        if (confirmed) {
+          try {
+            await window.electronAPI.cancelAnalysis();
+            console.log('Analysis cancelled by user');
+
+            // Reset to ready state (file still uploaded, can restart)
+            dispatch({ type: 'RESET_STATE' });
+          } catch (error) {
+            console.error('Failed to cancel analysis:', error);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [state.uiState, dispatch]);
+
   // ========== Event Handlers ==========
 
   const handleMenuClick = () => {
@@ -27,6 +59,10 @@ function App() {
 
   const handlePromptSelect = (promptName) => {
     dispatch({ type: 'SELECT_PROMPT', payload: promptName });
+  };
+
+  const handleProviderSelect = (providerName) => {
+    dispatch({ type: 'SELECT_PROVIDER', payload: providerName });
   };
 
   const handleFileUpload = (fileData) => {
@@ -70,6 +106,15 @@ function App() {
 
     } catch (error) {
       console.error('Analysis failed:', error);
+
+      // Handle cancellation - just reset, don't show error
+      if (error.code === 'ANALYSIS_CANCELLED' || error.cancelled) {
+        console.log('Analysis cancelled by user');
+        dispatch({ type: 'RESET_STATE' });
+        return;
+      }
+
+      // Handle other errors normally
       dispatch({
         type: 'ANALYSIS_ERROR',
         payload: {
@@ -128,6 +173,13 @@ function App() {
       <PromptSelector
         selected={state.selectedPrompt}
         onSelect={handlePromptSelect}
+        visible={['idle', 'prompt-selected'].includes(state.uiState)}
+      />
+
+      <ProviderSelector
+        availableProviders={state.availableProviders}
+        selected={state.selectedProvider}
+        onSelect={handleProviderSelect}
         visible={['idle', 'prompt-selected'].includes(state.uiState)}
       />
 

@@ -150,6 +150,18 @@ function setupIPCHandlers() {
 
   // ===== Analysis Execution =====
 
+  // IPC Handler: Cancel running analysis
+  ipcMain.handle('analysis:cancel', async () => {
+    try {
+      const { cancelAnalysis } = await import('../src/services/analysis-runner.js');
+      const cancelled = cancelAnalysis();
+      return { success: true, cancelled };
+    } catch (error) {
+      console.error('Failed to cancel analysis:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
   ipcMain.handle('analysis:run', async (event, params) => {
     try {
       // Validate parameters
@@ -204,6 +216,15 @@ function setupIPCHandlers() {
 
     } catch (error) {
       console.error('Analysis failed:', error);
+
+      // Handle cancellation separately (not an error, just stopped by user)
+      if (error.errorCode === 'ANALYSIS_CANCELLED' || error.code === 'ANALYSIS_CANCELLED') {
+        const ipcError = new Error(error.userMessage || error.message || 'Analysen blev afbrudt');
+        ipcError.code = 'ANALYSIS_CANCELLED';
+        ipcError.suggestions = error.recoverySuggestions || ['Analysen blev stoppet af brugeren'];
+        ipcError.cancelled = true;
+        throw ipcError;
+      }
 
       // Create a proper Error object for IPC serialization
       const ipcError = new Error(error.message || 'Analysis failed');

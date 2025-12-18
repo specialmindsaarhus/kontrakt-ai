@@ -7,9 +7,9 @@ import ErrorMessage from './ErrorMessage';
 export default function StatusArea({ onRetry }) {
   const state = useAppState();
 
-  // Idle / prompt-selected / file-hover - show nothing
+  // Idle / prompt-selected / file-hover - show nothing (completely hidden)
   if (['idle', 'prompt-selected', 'file-hover'].includes(state.uiState)) {
-    return <div className="status-area"></div>;
+    return null;
   }
 
   // Analysis running - show progress
@@ -57,6 +57,6 @@ export default function StatusArea({ onRetry }) {
     );
   }
 
-  // Fallback - empty status area
-  return <div className="status-area"></div>;
+  // Fallback - hidden
+  return null;
 }

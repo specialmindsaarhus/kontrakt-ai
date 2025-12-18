@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Status
 
-**Last Updated:** 2025-12-18 (GUI Testing & Quality Assurance Complete)
+**Last Updated:** 2025-12-18 (ESC Cancellation & ProviderSelector Complete)
 **GitHub Repository:** https://github.com/specialmindsaarhus/kontrakt-ai.git
 
 **Completed Phases:**
@@ -13,9 +13,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ **MVP Testing:** Complete end-to-end workflow tested and working
 - ✅ **GUI Testing & Polish:** User testing complete, UX improvements implemented
 - ✅ **Quality Assurance:** ESLint, pre-commit hooks, automated testing
-- ⏳ **Next:** Manual start button, ESC key cancel, Settings modal
+- ✅ **ProviderSelector UI:** Manual LLM provider selection
+- ✅ **ESC Key Cancellation:** Graceful cancellation with Ctrl+C signal
+- ⏳ **Next:** Settings modal, Manual start button (optional)
 
 **System Status:** ✅ **PRODUCTION READY** - Fully tested with quality assurance in place!
+
+**Recent Changes (Feature Implementation Session 2025-12-18 Late Evening):**
+- ✅ **MAJOR:** Implemented ProviderSelector UI component (manual provider selection)
+- ✅ **MAJOR:** Implemented ESC key cancellation with confirmation dialog
+- ✅ Fixed layout overflow issues (all content fits in viewport without scrolling)
+- ✅ Refined ProviderSelector styling (subtle, text-based selector)
+- ✅ Fixed Windows process termination (graceful Ctrl+C + force kill with SIGKILL)
+- ✅ Fixed stdin handling in Gemini adapter (keep open for cancellation signals)
+- ✅ Moved Promise resolution to EXIT event (more reliable than CLOSE event)
+- ✅ Added comprehensive debug logging for process lifecycle
+- ✅ StatusArea now properly hides when empty (prevents layout issues)
 
 **Recent Changes (GUI Testing & QA Session 2025-12-18 Evening):**
 - ✅ Fixed checkmark display (now shows immediately after file upload, not just after analysis)
@@ -67,7 +80,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **What Works:**
 - ✅ Complete Electron GUI with drag-and-drop
 - ✅ 3 Danish prompt types (Kontrakt, Manual, Compliance)
+- ✅ **Manual provider selection** (Gemini, Claude, OpenAI) - subtle text-based UI
 - ✅ Real-time progress updates during analysis (smooth, incremental, mapped to actual timing)
+- ✅ **ESC key cancellation** - graceful Ctrl+C signal with 2s timeout, then force kill
 - ✅ Checkmark appears immediately after file upload
 - ✅ Success animation (bouncy checkmark with elastic bounce)
 - ✅ Error handling with Danish messages + retry
@@ -84,12 +99,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ **Smoke test** (30s rapid validation of full workflow)
 
 **Known Issues & TODO:**
-- 🎯 **HIGH PRIORITY:** Add ProviderSelector UI component (spec ready in specs/ui-components.spec.md)
-- ⚠️ Temporary: Provider order hardcoded in cli-detector.js (Gemini → Claude → OpenAI)
-- ⚠️ Hamburger menu does nothing (settings modal not implemented)
-- ⚠️ Auto-start behavior (should be manual with Start button)
-- ⚠️ No ESC key to cancel analysis
+- ✅ ~~Add ProviderSelector UI component~~ (COMPLETED 2025-12-18)
+- ✅ ~~ESC key to cancel analysis~~ (COMPLETED 2025-12-18)
+- 🎯 **NEXT:** Settings modal (hamburger menu implementation)
+- ⚠️ Auto-start behavior (currently auto-starts, user requested to keep this)
+- 📋 **Future:** Implement provider custom instructions (spec ready: specs/provider-custom-instructions.spec.md)
+  - **Problem:** Development CLAUDE.md causes errors when Claude CLI reads it during analysis
+  - **Solution:** Separate provider-configs/ directory for runtime analysis instructions
+  - **Benefit:** Users can customize LLM behavior without modifying code
 - 📋 **Future:** OpenAI CLI support
+- 📋 **Future:** Settings UI for editing provider instructions
+- 📋 **Future:** Manual start button (optional - user prefers auto-start)
 - 📋 **Future:** Leverage Claude context bleed for personalized client analysis (chat feature)
 
 For detailed phase completion summaries, see [HISTORY.md](./HISTORY.md).

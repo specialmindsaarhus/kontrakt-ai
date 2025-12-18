@@ -16,6 +16,29 @@ import { info, warn, error as logError, ErrorFactory, EnhancedError } from '../u
  * 4. Update settings and track usage
  */
 
+// Cancellation state
+let isCancelled = false;
+let currentAnalysisId = null;
+let currentAdapter = null; // Store current adapter to kill its process
+
+/**
+ * Cancel the currently running analysis
+ */
+export function cancelAnalysis() {
+  if (currentAnalysisId) {
+    info('Analysis cancellation requested', { analysisId: currentAnalysisId });
+    isCancelled = true;
+
+    // Kill the running CLI process
+    if (currentAdapter && typeof currentAdapter.cancel === 'function') {
+      currentAdapter.cancel();
+    }
+
+    return true;
+  }
+  return false;
+}
+
 /**
  * Run complete document analysis
  * @param {Object} options - Analysis options
@@ -31,9 +54,28 @@ import { info, warn, error as logError, ErrorFactory, EnhancedError } from '../u
  */
 export async function runAnalysis(options, progressCallback = null) {
   const startTime = Date.now();
+  const analysisId = `analysis-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+
+  // Reset cancellation state for this analysis
+  isCancelled = false;
+  currentAnalysisId = analysisId;
+
+  // Helper to check if cancelled
+  const checkCancellation = () => {
+    if (isCancelled) {
+      currentAnalysisId = null;
+      const error = new Error('Analysen blev afbrudt');
+      error.errorCode = 'ANALYSIS_CANCELLED';
+      error.code = 'ANALYSIS_CANCELLED';
+      error.userMessage = 'Analysen blev afbrudt';
+      error.recoverySuggestions = ['Analysen blev stoppet af brugeren'];
+      throw error;
+    }
+  };
 
   // Helper to send progress updates
   const sendProgress = (percent, stage, message) => {
+    checkCancellation(); // Check before sending progress
     if (progressCallback && typeof progressCallback === 'function') {
       progressCallback({ percent, stage, message });
     }
@@ -85,6 +127,7 @@ export async function runAnalysis(options, progressCallback = null) {
     console.log('[DEBUG] Creating adapter for provider:', provider);
     sendProgress(15, 0, 'Preparing CLI');
     const adapter = getAdapter(provider);
+    currentAdapter = adapter; // Store for cancellation
     console.log('[DEBUG] Adapter created:', adapter.providerName);
 
     // Check if CLI is available
@@ -104,9 +147,20 @@ export async function runAnalysis(options, progressCallback = null) {
     // Mapped to Stage 1 range: 20-80% (most of the time is here)
     let currentProgress = 20;
     const progressInterval = setInterval(() => {
+      // Check cancellation before sending progress (don't throw, just stop)
+      if (isCancelled) {
+        clearInterval(progressInterval);
+        return;
+      }
+
       if (currentProgress < 70) {
         currentProgress += 2;  // Increment by 2% every 3 seconds
-        sendProgress(currentProgress, 1, 'Analyzing content');
+        try {
+          sendProgress(currentProgress, 1, 'Analyzing content');
+        } catch (_err) {
+          // If error during progress (e.g., cancellation), stop interval
+          clearInterval(progressInterval);
+        }
       }
     }, 3000);  // Update every 3 seconds
 
@@ -209,6 +263,11 @@ export async function runAnalysis(options, progressCallback = null) {
       userMessage: err.getUserMessage ? err.getUserMessage() : err.message,
       executionTime: totalTime
     };
+  } finally {
+    // Clean up cancellation state
+    currentAnalysisId = null;
+    currentAdapter = null;
+    isCancelled = false;
   }
 }
 

@@ -1,6 +1,5 @@
 import { spawn } from 'child_process';
 import { existsSync, readFileSync } from 'fs';
-import path from 'path';
 import { isCLIAvailable, getCLIVersion } from '../utils/cli-detector.js';
 
 /**
@@ -13,6 +12,49 @@ export class ClaudeAdapter {
     this.cliCommand = 'claude';
     this._isAvailableCache = null;
     this._versionCache = null;
+    this._currentProcess = null; // Track running process for cancellation
+    this._isCancelled = false; // Track if process was cancelled
+  }
+
+  /**
+   * Cancel/kill the currently running CLI process
+   */
+  cancel() {
+    if (this._currentProcess && !this._currentProcess.killed) {
+      console.log('[DEBUG] Sending cancellation signal to Claude CLI');
+      this._isCancelled = true; // Mark as cancelled
+
+      try {
+        // Try graceful cancellation first: send Ctrl+C to stdin
+        if (this._currentProcess.stdin && !this._currentProcess.stdin.destroyed) {
+          console.log('[DEBUG] Sending Ctrl+C to CLI stdin');
+          this._currentProcess.stdin.write('\x03'); // Ctrl+C
+
+          // Set up timeout for forceful kill if graceful cancel doesn't work
+          setTimeout(() => {
+            if (this._currentProcess && !this._currentProcess.killed) {
+              console.log('[DEBUG] Graceful cancel failed, force killing process');
+              this._currentProcess.kill('SIGKILL');
+            }
+          }, 2000); // Wait 2 seconds for graceful shutdown
+        } else {
+          // If stdin is not available, force kill immediately
+          console.log('[DEBUG] Stdin not available, force killing process');
+          this._currentProcess.kill('SIGKILL');
+        }
+      } catch (err) {
+        console.log('[DEBUG] Error during cancellation:', err.message);
+        // Fallback to force kill
+        try {
+          this._currentProcess.kill('SIGKILL');
+        } catch (_e) {
+          // Process might already be dead
+        }
+      }
+
+      return true;
+    }
+    return false;
   }
 
   /**
@@ -173,6 +215,9 @@ export class ClaudeAdapter {
    * @returns {Promise<{success: boolean, stdout: string, stderr: string, error?: string, errorCode?: string}>}
    */
   _executeCommand(args, prompt, timeout) {
+    // Reset cancellation flag for this execution
+    this._isCancelled = false;
+
     return new Promise((resolve) => {
       let stdout = '';
       let stderr = '';
@@ -193,6 +238,9 @@ export class ClaudeAdapter {
         // Remove timeout from spawn options - we handle it manually below
       });
 
+      // Store reference to current process for cancellation
+      this._currentProcess = child;
+
       // Set up timeout handler
       const timeoutId = setTimeout(() => {
         timedOut = true;
@@ -209,15 +257,106 @@ export class ClaudeAdapter {
         stderr += data.toString();
       });
 
+      // Handle process exit (fires before close)
+      child.on('exit', (code, signal) => {
+        console.log('[DEBUG] EXIT EVENT FIRED! Code:', code, 'Signal:', signal);
+
+        clearTimeout(timeoutId);
+
+        // Clean up stdin if still open
+        if (child.stdin && !child.stdin.destroyed) {
+          try {
+            child.stdin.end();
+          } catch (_e) {
+            // Ignore errors if stdin already closed
+          }
+        }
+
+        this._currentProcess = null; // Clear reference
+
+        console.log('[DEBUG] Process exited. Code:', code, 'Signal:', signal, 'Timed out:', timedOut, 'Cancelled:', this._isCancelled);
+        console.log('[DEBUG] Stdout length:', stdout.length, 'chars');
+        console.log('[DEBUG] Stderr length:', stderr.length, 'chars');
+
+        // Check if cancelled first
+        if (this._isCancelled) {
+          console.log('[DEBUG] CANCELLED - Process was killed by user');
+          resolve({
+            success: false,
+            stdout,
+            stderr,
+            error: 'Analysis was cancelled by user',
+            errorCode: 'CANCELLED'
+          });
+        } else if (timedOut) {
+          console.log('[DEBUG] TIMEOUT - Command took longer than', timeout, 'ms');
+          resolve({
+            success: false,
+            stdout,
+            stderr,
+            error: `Command timed out after ${timeout}ms`,
+            errorCode: 'TIMEOUT'
+          });
+        } else if (code === 0) {
+          console.log('[DEBUG] SUCCESS - Command completed successfully');
+          resolve({
+            success: true,
+            stdout,
+            stderr
+          });
+        } else {
+          // Check for authentication errors
+          const stderrLower = stderr.toLowerCase();
+          if (stderrLower.includes('auth') || stderrLower.includes('login') || stderrLower.includes('unauthorized')) {
+            resolve({
+              success: false,
+              stdout,
+              stderr,
+              error: 'Authentication required. Please run "claude login" in your terminal.',
+              errorCode: 'AUTH_REQUIRED'
+            });
+          } else {
+            resolve({
+              success: false,
+              stdout,
+              stderr,
+              error: `Command failed with exit code ${code}. Error: ${stderr || 'Unknown error'}`,
+              errorCode: 'EXECUTION_FAILED'
+            });
+          }
+        }
+      });
+
       // Handle process completion
       child.on('close', (code) => {
         clearTimeout(timeoutId);
 
-        console.log('[DEBUG] Process closed. Code:', code, 'Timed out:', timedOut);
+        // Clean up stdin if still open
+        if (child.stdin && !child.stdin.destroyed) {
+          try {
+            child.stdin.end();
+          } catch (_e) {
+            // Ignore errors if stdin already closed
+          }
+        }
+
+        this._currentProcess = null; // Clear reference
+
+        console.log('[DEBUG] Process closed. Code:', code, 'Timed out:', timedOut, 'Cancelled:', this._isCancelled);
         console.log('[DEBUG] Stdout length:', stdout.length, 'chars');
         console.log('[DEBUG] Stderr length:', stderr.length, 'chars');
 
-        if (timedOut) {
+        // Check if cancelled first
+        if (this._isCancelled) {
+          console.log('[DEBUG] CANCELLED - Process was killed by user');
+          resolve({
+            success: false,
+            stdout,
+            stderr,
+            error: 'Analysis was cancelled by user',
+            errorCode: 'CANCELLED'
+          });
+        } else if (timedOut) {
           console.log('[DEBUG] TIMEOUT - Command took longer than', timeout, 'ms');
           resolve({
             success: false,

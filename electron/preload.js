@@ -14,6 +14,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // ========== Analysis ==========
   runAnalysis: (params) => ipcRenderer.invoke('analysis:run', params),
+  cancelAnalysis: () => ipcRenderer.invoke('analysis:cancel'),
 
   // Analysis progress events (main -> renderer)
   onAnalysisProgress: (callback) => {
