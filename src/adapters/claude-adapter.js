@@ -223,23 +223,25 @@ export class ClaudeAdapter {
       let stderr = '';
       let timedOut = false;
 
-      // Build full argument list with prompt at the end
-      const fullArgs = [...args, prompt];
-
       // Debug logging
       console.log('[DEBUG] Executing Claude CLI:');
       console.log('[DEBUG] Command:', this.cliCommand);
-      console.log('[DEBUG] Args count:', fullArgs.length);
+      console.log('[DEBUG] Args count:', args.length);
       console.log('[DEBUG] Timeout:', timeout, 'ms');
       console.log('[DEBUG] Prompt length:', prompt.length, 'chars');
 
-      const child = spawn(this.cliCommand, fullArgs, {
+      // Use stdin for prompt (better for long prompts, avoids CLI argument length limits)
+      const child = spawn(this.cliCommand, args, {
         shell: true
         // Remove timeout from spawn options - we handle it manually below
       });
 
       // Store reference to current process for cancellation
       this._currentProcess = child;
+
+      // Write prompt to stdin and close it immediately
+      child.stdin.write(prompt);
+      child.stdin.end();  // CRITICAL: Close stdin so CLI knows input is complete
 
       // Set up timeout handler
       const timeoutId = setTimeout(() => {

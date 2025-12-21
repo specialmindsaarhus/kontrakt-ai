@@ -175,7 +175,7 @@ export class GeminiAdapter {
       }
 
       // Execute CLI command
-      const result = await this._executeCommand(commandData.args, commandData.prompt, request.timeout || 180000);
+      const result = await this._executeCommand(commandData.args, commandData.prompt, request.timeout || 300000);
 
       // Get CLI version
       const version = await this.getVersion();
@@ -245,10 +245,9 @@ export class GeminiAdapter {
       // Store reference to current process for cancellation
       this._currentProcess = child;
 
-      // Write prompt to stdin
-      // Note: Keep stdin open so we can send cancellation signals (Ctrl+C)
+      // Write prompt to stdin and close it immediately
       child.stdin.write(prompt);
-      // Don't end stdin immediately - we need it for cancellation
+      child.stdin.end();  // CRITICAL: Close stdin so CLI knows input is complete
 
       // Set up timeout handler
       const timeoutId = setTimeout(() => {

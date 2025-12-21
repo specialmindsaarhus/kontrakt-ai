@@ -4,20 +4,79 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Status
 
-**Last Updated:** 2025-12-18 (ESC Cancellation & ProviderSelector Complete)
+**Last Updated:** 2025-12-21 (Critical CLI Fix - Both CLIs Working)
 **GitHub Repository:** https://github.com/specialmindsaarhus/kontrakt-ai.git
 
 **Completed Phases:**
 - ✅ **Phase 0-8:** Complete application (backend + frontend + IPC)
 - ✅ **Gemini CLI Integration:** Full Gemini support with stdin input method
+- ✅ **Claude CLI Integration:** Full Claude support with stdin input method
 - ✅ **MVP Testing:** Complete end-to-end workflow tested and working
 - ✅ **GUI Testing & Polish:** User testing complete, UX improvements implemented
 - ✅ **Quality Assurance:** ESLint, pre-commit hooks, automated testing
 - ✅ **ProviderSelector UI:** Manual LLM provider selection
 - ✅ **ESC Key Cancellation:** Graceful cancellation with Ctrl+C signal
-- ⏳ **Next:** Settings modal, Manual start button (optional)
+- ✅ **CLI Timeout Fix:** Both Gemini and Claude working reliably (~60-130s)
+- ⏳ **Next:** Settings modal implementation (spec ready)
 
-**System Status:** ✅ **PRODUCTION READY** - Fully tested with quality assurance in place!
+**System Status:** ✅ **PRODUCTION READY** - Both CLIs working reliably!
+
+## Recent Critical Fix (2025-12-21)
+
+**Problem:** Both Claude and Gemini CLI adapters were timing out (300s) during analysis, even though the CLIs themselves worked fine when tested directly.
+
+**Root Cause:**
+1. **Claude adapter:** Passing 4.8KB prompt as CLI argument exceeded Windows command-line length handling capacity
+2. **Gemini adapter:** Not closing stdin after writing prompt caused process to hang indefinitely waiting for more input
+
+**Solution:**
+- **Claude adapter:** Switched from CLI arguments to stdin method
+  ```javascript
+  // BEFORE (broken):
+  const fullArgs = [...args, prompt];
+  spawn(cliCommand, fullArgs);
+
+  // AFTER (working):
+  const child = spawn(cliCommand, args);
+  child.stdin.write(prompt);
+  child.stdin.end();  // Critical!
+  ```
+
+- **Gemini adapter:** Added `child.stdin.end()` after writing prompt
+  ```javascript
+  child.stdin.write(prompt);
+  child.stdin.end();  // CRITICAL: Signals input complete
+  ```
+
+**Results:**
+- ✅ **Gemini:** Analysis completes in ~68 seconds (was timing out after 300s)
+- ✅ **Claude:** Analysis completes in ~129 seconds (was timing out after 300s)
+- ✅ **Both CLIs:** Now work reliably without timeouts
+- ✅ **Output quality:** Claude produces ~2x more detailed analysis (12KB vs 7KB)
+
+**Files Modified:**
+- `src/adapters/claude-adapter.js` - stdin method instead of CLI arguments
+- `src/adapters/gemini-adapter.js` - added stdin.end() call
+
+**Key Learnings:**
+1. **Stdin method is superior:** Avoids Windows CLI argument length limits
+2. **Always close stdin:** `child.stdin.end()` signals EOF to child process
+3. **`--system-prompt` flag prevents CLAUDE.md conflicts:** Development instructions in CLAUDE.md don't interfere with runtime analysis
+
+**Testing:**
+- ✅ Direct CLI test: `cat prompt | claude --print` worked (60s)
+- ✅ App with fix: Both CLIs complete successfully
+- ✅ No more "Analysen tog for lang tid" errors
+
+---
+
+**Recent Changes (Settings Modal Spec - 2025-12-20):**
+- ✅ Created comprehensive settings modal specification (`specs/settings-modal.spec.md`)
+- ✅ Spec includes: Full-height panel (480px), slides from right, auto-save behavior
+- ✅ Features defined: Logo upload, output preferences (formats, auto-open), recent analyses list
+- ✅ Design decisions: Settings gear icon (tandhjul), subtle backdrop, 400ms animation
+- ✅ Technical details: IPC integration, auto-save with toast feedback, 3 close methods
+- ✅ Implementation phases: MVP (logo, formats, recent) → Phase 2 (colors, company name)
 
 **Recent Changes (Feature Implementation Session 2025-12-18 Late Evening):**
 - ✅ **MAJOR:** Implemented ProviderSelector UI component (manual provider selection)
@@ -81,6 +140,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ Complete Electron GUI with drag-and-drop
 - ✅ 3 Danish prompt types (Kontrakt, Manual, Compliance)
 - ✅ **Manual provider selection** (Gemini, Claude, OpenAI) - subtle text-based UI
+- ✅ **Both Claude and Gemini CLI working** - stdin method, ~60-130s analysis time
 - ✅ Real-time progress updates during analysis (smooth, incremental, mapped to actual timing)
 - ✅ **ESC key cancellation** - graceful Ctrl+C signal with 2s timeout, then force kill
 - ✅ Checkmark appears immediately after file upload
@@ -89,7 +149,6 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ Export to Word, PDF, Markdown (auto-open on button click)
 - ✅ Auto-save settings (debounced)
 - ✅ CLI provider detection (Claude Code, Gemini, OpenAI)
-- ✅ **Gemini CLI integration** (stdin method, ~90 sec analysis)
 - ✅ Complete document analysis workflow
 - ✅ Multi-format report generation (PDF, DOCX, MD)
 - ✅ Automatic file organization by client and date (DD-MM-YYYY format)
@@ -101,13 +160,22 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Known Issues & TODO:**
 - ✅ ~~Add ProviderSelector UI component~~ (COMPLETED 2025-12-18)
 - ✅ ~~ESC key to cancel analysis~~ (COMPLETED 2025-12-18)
-- 🎯 **NEXT:** Settings modal (hamburger menu implementation)
+- ✅ ~~Fix CLI timeout issues~~ (COMPLETED 2025-12-21 - stdin method)
+- 🎯 **NEXT:** Settings modal implementation (spec ready: specs/settings-modal.spec.md)
+  - **Spec includes:** Full-height panel, slides from right, auto-save, logo upload, output preferences, recent analyses
+  - **Icon:** Settings gear (tandhjul), not hamburger menu
+  - **Features:** Style settings (logo), output preferences (formats, auto-open), session state, 5 recent analyses
 - ⚠️ Auto-start behavior (currently auto-starts, user requested to keep this)
+- 📋 **Future (Foundational):** Provider abstraction refactoring (spec ready: specs/provider-abstraction.spec.md)
+  - **Problem:** Current adapters tightly coupled to CLI syntax and file paths
+  - **Solution:** Stateless provider interface with standardized error handling
+  - **Benefit:** Easy to add new providers (APIs, local models, web sessions)
+  - **Prerequisite:** Should be done before OpenAI adapter and custom instructions
 - 📋 **Future:** Implement provider custom instructions (spec ready: specs/provider-custom-instructions.spec.md)
   - **Problem:** Development CLAUDE.md causes errors when Claude CLI reads it during analysis
   - **Solution:** Separate provider-configs/ directory for runtime analysis instructions
   - **Benefit:** Users can customize LLM behavior without modifying code
-- 📋 **Future:** OpenAI CLI support
+- 📋 **Future:** OpenAI CLI support (needs provider abstraction first)
 - 📋 **Future:** Settings UI for editing provider instructions
 - 📋 **Future:** Manual start button (optional - user prefers auto-start)
 - 📋 **Future:** Leverage Claude context bleed for personalized client analysis (chat feature)
@@ -336,13 +404,16 @@ For detailed phase completion summaries, see [HISTORY.md](./HISTORY.md).
 - `src/utils/prompt-loader.js` - System prompt loading
 - `prompts/*.md` - 3 Danish system prompts
 
-**Design & Specs (Complete):**
+**Design & Specs:**
 - `mockups/main-screen-v4.html` - Final approved interactive mockup
-- `specs/ui-components.spec.md` - 15 React components
-- `specs/state-management.spec.md` - Context + reducer architecture
-- `specs/ipc-contracts.spec.md` - Secure Electron IPC
-- `specs/user-flows.spec.md` - 10 user workflows
-- `specs/progress-mapping.spec.md` - Progress animation timing specification
+- `specs/ui-components.spec.md` - 15 React components (✅ implemented)
+- `specs/settings-modal.spec.md` - Settings panel component (❌ not implemented, spec ready)
+- `specs/state-management.spec.md` - Context + reducer architecture (✅ implemented)
+- `specs/ipc-contracts.spec.md` - Secure Electron IPC (✅ implemented)
+- `specs/user-flows.spec.md` - 10 user workflows (✅ implemented)
+- `specs/progress-mapping.spec.md` - Progress animation timing (✅ implemented)
+- `specs/provider-abstraction.spec.md` - LLM provider interface (❌ not implemented)
+- `specs/provider-custom-instructions.spec.md` - Custom instructions system (❌ not implemented)
 
 **Frontend (Complete):**
 - `electron/preload.js` - IPC bridge with contextBridge
@@ -377,6 +448,7 @@ Open `mockups/main-screen-v4.html` in browser to see approved design with all 6 
 
 **Key Design Principles:**
 - CLI-based (no API keys, leverages existing subscriptions)
+  - *See ADR-001 for rationale and future HTTP session consideration*
 - Local-first (client confidentiality, no cloud uploads)
 - Multi-LLM support (Claude, Gemini*, OpenAI*)
 - Professional output (PDF/Word reports)
@@ -580,23 +652,24 @@ Phase 8 (Frontend Implementation) is complete! MVP awaiting approval.
 
 ### Immediate TODO (User Requests - After MVP Approval)
 
-1. **ESC Key to Cancel Analysis**
-   - Add ESC key handler during analysis
-   - Show confirmation dialog: "Vil du afslutte analyse?"
-   - Return to ready-to-start state (file uploaded, can restart or upload new)
-   - Implement cancel IPC method
+1. ✅ **ESC Key to Cancel Analysis** (COMPLETED 2025-12-18)
+   - ✅ Add ESC key handler during analysis
+   - ✅ Graceful Ctrl+C signal with 2s timeout, then force kill
+   - ✅ Return to ready-to-start state (file uploaded, can restart or upload new)
 
-2. **Manual Start Button**
+2. **Settings Modal** 🎯 **NEXT PRIORITY** (Spec ready: `specs/settings-modal.spec.md`)
+   - Implement settings panel UI (480px, slides from right, full-height)
+   - Settings gear icon (tandhjul) in header
+   - Logo upload (file picker button)
+   - Output preferences (default formats, auto-open toggle)
+   - Recent analyses list (5 most recent, click to open folder)
+   - Auto-save with subtle toast notification
+
+3. **Manual Start Button** (Optional - user prefers auto-start)
    - Remove auto-start behavior
    - Add 'ready-to-start' state
    - Show Start button inside drop zone when file + prompt selected
    - User explicitly clicks to begin analysis
-
-3. **Settings Modal (Hamburger Menu)**
-   - Implement settings UI
-   - Branding configuration (company name, colors)
-   - Output preferences (default formats, organization)
-   - CLI provider preferences
 
 4. **Better Time Estimates**
    - Show estimated time based on file size
@@ -634,8 +707,14 @@ Phase 8 (Frontend Implementation) is complete! MVP awaiting approval.
 - **PREVENTION-SETUP-COMPLETE.md** - Quality assurance setup guide
 - **TROUBLESHOOTING.md** - Common issues and solutions
 
+**Architecture Decisions:**
+- **docs/architecture/** - Architecture Decision Records (ADRs)
+- **docs/architecture/ADR-001-cli-vs-http-sessions.md** - CLI vs HTTP session approach (rationale and pivot criteria)
+
 **Specifications:**
 - **specs/*.spec.md** - Complete technical specifications
+- **specs/provider-abstraction.spec.md** - LLM provider interface (enables future HTTP session support)
+- **specs/provider-custom-instructions.spec.md** - Custom instructions system (not yet implemented)
 - **specs/progress-mapping.spec.md** - Progress animation timing details
 - **mockups/main-screen-v4.html** - Interactive design mockup
 

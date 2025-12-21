@@ -1,5 +1,36 @@
 # Provider Custom Instructions Specification
 
+## Architecture Decision: CLAUDE.md Usage Strategy
+
+### Future Chat Interface Consideration
+
+The app will include a chat interface for users to customize analysis behavior. This requires careful handling of CLAUDE.md:
+
+#### User's Proposals:
+
+**Option 1: Build-time Clear**
+- Development: CLAUDE.md contains dev instructions
+- Production: CLAUDE.md cleared and used only for user preferences
+- Build script replaces CLAUDE.md content before deployment
+
+**Option 2: Dual Update System**
+- Chat updates both CLAUDE.md (context) and prompt files (actual usage)
+- Maintains sync between user preferences and prompts
+- Risk of duplication/sync issues
+
+**Option 3: Separate USER-PREFERENCES.md (Recommended)**
+- CLAUDE.md: Development only (never deployed)
+- USER-PREFERENCES.md: User customization (always included)
+- Chat interface updates USER-PREFERENCES.md
+- Analysis runner prepends USER-PREFERENCES.md to prompts
+- Clean separation, single source of truth
+
+#### Current Status
+
+Currently using `--system-prompt` flag which overrides CLAUDE.md, so no immediate conflict. Decision on chat interface architecture deferred until implementation phase.
+
+---
+
 ## Problem Statement
 
 The current `CLAUDE.md` file at the project root is intended for development guidance (instructions for Claude Code CLI during app development). However, when the Contract Reviewer app uses the Claude CLI for document analysis, Claude may read `CLAUDE.md` and get confused by development instructions, resulting in errors or incorrect analysis output.
