@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, shell, session } from 'electron';
+import { app, BrowserWindow, ipcMain, shell, session, dialog } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
@@ -42,7 +42,7 @@ app.on('ready', () => {
         responseHeaders: {
           ...details.responseHeaders,
           'Content-Security-Policy': [
-            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:;"
+            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: file:; font-src 'self' data:;"
           ]
         }
       });
@@ -200,6 +200,23 @@ function setupIPCHandlers() {
         });
       }
 
+      // Auto-open reports if enabled in settings.json
+      // Backend reads settings.json (non-blocking approach)
+      const { loadSettings } = await import('../src/utils/settings-manager.js');
+      const settings = loadSettings();
+
+      if (settings.outputPreferences?.autoOpen) {
+        console.log('[BACKEND] Auto-opening reports (setting enabled in settings.json)');
+        // Open all generated reports
+        for (const reportPath of Object.values(reportPaths)) {
+          try {
+            await shell.openPath(reportPath);
+          } catch (error) {
+            console.error('[BACKEND] Failed to auto-open report:', reportPath, error);
+          }
+        }
+      }
+
       return {
         output: result.cliResult?.output || '',
         executionTime: result.executionTime || 0,
@@ -210,7 +227,8 @@ function setupIPCHandlers() {
           promptName: result.metadata?.promptName || params.promptName,
           documentName: result.metadata?.documentPath?.split(/[/\\]/).pop() || params.documentPath?.split(/[/\\]/).pop() || '',
           clientName: result.metadata?.clientName || params.clientName || '',
-          analysisDate: new Date().toISOString()
+          analysisDate: new Date().toISOString(),
+          outputPath: result.metadata?.outputPath || ''
         }
       };
 
@@ -277,6 +295,91 @@ function setupIPCHandlers() {
     } catch (error) {
       console.error('Failed to open directory:', error);
       throw error;
+    }
+  });
+
+  ipcMain.handle('file:open-path', async (event, pathToOpen) => {
+    try {
+      if (!pathToOpen || typeof pathToOpen !== 'string') {
+        throw new Error('Invalid path');
+      }
+
+      if (!fs.existsSync(pathToOpen)) {
+        throw new Error('Path not found');
+      }
+
+      // Open path (works for both files and directories)
+      const result = await shell.openPath(pathToOpen);
+
+      // shell.openPath returns empty string on success, error message on failure
+      if (result) {
+        throw new Error(result);
+      }
+
+      return { success: true };
+
+    } catch (error) {
+      console.error('Failed to open path:', error);
+      throw error;
+    }
+  });
+
+  // ===== Dialog Operations =====
+
+  ipcMain.handle('dialog:select-file', async (event, filters) => {
+    try {
+      const result = await dialog.showOpenDialog(mainWindow, {
+        properties: ['openFile'],
+        filters: filters || [
+          { name: 'All Files', extensions: ['*'] }
+        ]
+      });
+
+      if (result.canceled) {
+        return null;
+      }
+
+      return result.filePaths[0];
+
+    } catch (error) {
+      console.error('Failed to show file dialog:', error);
+      throw error;
+    }
+  });
+
+  // ===== Logo Loading =====
+
+  ipcMain.handle('logo:load', async (event, logoPath) => {
+    try {
+      if (!logoPath) {
+        return null;
+      }
+
+      // Read the file
+      const fileBuffer = fs.readFileSync(logoPath);
+
+      // Detect MIME type from extension
+      const ext = path.extname(logoPath).toLowerCase();
+      const mimeTypes = {
+        '.png': 'image/png',
+        '.jpg': 'image/jpeg',
+        '.jpeg': 'image/jpeg',
+        '.svg': 'image/svg+xml',
+        '.gif': 'image/gif',
+        '.webp': 'image/webp'
+      };
+
+      const mimeType = mimeTypes[ext] || 'image/png';
+
+      // Convert to base64 data URL
+      const base64 = fileBuffer.toString('base64');
+      const dataUrl = `data:${mimeType};base64,${base64}`;
+
+      return dataUrl;
+
+    } catch (error) {
+      console.error('Failed to load logo:', error);
+      return null;  // Return null instead of throwing, so UI falls back to "K"
     }
   });
 

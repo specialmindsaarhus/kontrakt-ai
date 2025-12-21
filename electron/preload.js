@@ -34,6 +34,9 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ========== File Operations ==========
   openFile: (filePath) => ipcRenderer.invoke('file:open', filePath),
   openDirectory: (dirPath) => ipcRenderer.invoke('file:open-directory', dirPath),
+  openPath: (path) => ipcRenderer.invoke('file:open-path', path),
+  selectFile: (filters) => ipcRenderer.invoke('dialog:select-file', filters),
+  loadLogo: (logoPath) => ipcRenderer.invoke('logo:load', logoPath),
 
   // ========== Export ==========
   exportReport: (params) => ipcRenderer.invoke('export:report', params),
