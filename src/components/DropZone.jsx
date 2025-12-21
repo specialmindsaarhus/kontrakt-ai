@@ -83,7 +83,6 @@ export default function DropZone({ onFileUpload }) {
       case 'prompt-selected':
         return <UploadCloud size={56} strokeWidth={1.5} />;
       case 'file-hover':
-      case isDragOver:
         return <ArrowDownCircle size={56} strokeWidth={1.5} />;
       case 'analysis-running':
         return <Loader size={48} strokeWidth={2} className="spinner" />;
@@ -104,7 +103,6 @@ export default function DropZone({ onFileUpload }) {
       case 'prompt-selected':
         return 'Klar til at modtage';
       case 'file-hover':
-      case isDragOver:
         return 'Slip for at uploade';
       case 'analysis-running':
       case 'completed':

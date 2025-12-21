@@ -5,6 +5,143 @@ This file contains detailed completion summaries for all phases of the Contract 
 For current project status and active development information, see [CLAUDE.md](./CLAUDE.md).
 
 ---
+
+## Recent Implementations (2025-12-21)
+
+### CLI Timeout Fix (2025-12-21)
+
+**Problem:** Both Claude and Gemini CLI adapters were timing out (300s) during analysis, even though the CLIs themselves worked fine when tested directly.
+
+**Root Cause:**
+1. **Claude adapter:** Passing 4.8KB prompt as CLI argument exceeded Windows command-line length handling capacity
+2. **Gemini adapter:** Not closing stdin after writing prompt caused process to hang indefinitely waiting for more input
+
+**Solution:**
+- **Claude adapter:** Switched from CLI arguments to stdin method
+- **Gemini adapter:** Added `child.stdin.end()` after writing prompt
+
+**Results:**
+- ✅ Gemini: Analysis completes in ~68 seconds (was timing out after 300s)
+- ✅ Claude: Analysis completes in ~129 seconds (was timing out after 300s)
+- ✅ Both CLIs now work reliably without timeouts
+
+**Files Modified:**
+- `src/adapters/claude-adapter.js` - stdin method instead of CLI arguments
+- `src/adapters/gemini-adapter.js` - added stdin.end() call
+
+**Key Learnings:**
+1. Stdin method is superior - avoids Windows CLI argument length limits
+2. Always close stdin - `child.stdin.end()` signals EOF to child process
+3. `--system-prompt` flag prevents CLAUDE.md conflicts
+
+---
+
+### Settings Modal Implementation (2025-12-21)
+
+**Status:** ✅ **COMPLETE AND VERIFIED NON-BLOCKING**
+
+**Implementation Summary:**
+The settings modal was already 95% complete (implemented earlier but temporarily disabled for testing). Re-enabled by uncommenting code in `src/App.jsx`.
+
+**Architecture:**
+Settings modal follows **settings.json approach** with NO backend interruption:
+- User changes setting in modal → Modal calls onSettingChange → AppContext updates state + auto-saves to settings.json (debounced 1s) → Backend reads settings.json at lifecycle points
+
+**Non-Blocking Tests Performed:**
+1. ✅ Settings changes during running analysis - no interruption
+2. ✅ Modal operations are non-blocking - UI smooth
+3. ✅ Auto-save debouncing works (1s delay)
+4. ✅ IPC non-blocking (file picker, folder opening)
+5. ✅ Settings persist across app restarts
+
+**Performance Results:**
+- Gemini: ~60-97 seconds (consistent with modal open/closed)
+- Claude: ~128-245 seconds (varies by response length, not modal state)
+- No timeout errors during modal usage
+- Modal animations: Smooth 60fps (CSS transforms)
+
+**Current Capabilities (Phase 1 - MVP):**
+- ✅ Logo upload with file picker
+- ✅ Default formats multi-select (PDF, Word, Markdown)
+- ✅ Auto-open toggle
+- ✅ Last provider display (read-only)
+- ✅ Recent analyses list (5 most recent, clickable)
+- ✅ Auto-save with toast feedback ("Gemt")
+- ✅ Three close methods (X button, ESC key, click outside)
+
+---
+
+### Logo Loading Fix (2025-12-21)
+
+**Status:** ✅ **FIXED - Logo displays correctly from settings**
+
+**Problem:** Logo selected in settings modal was not displaying in the GUI header - always showed fallback "K" logo instead.
+
+**Root Cause:**
+- Electron's sandbox mode blocks renderer process from accessing `file://` URLs directly
+- Logo component attempted to load images using `file:///C:/path/to/logo.jpg` format
+- Security policy prevented local file access from sandboxed renderer
+
+**Solution:** Implemented **IPC-based logo loading** with base64 data URLs:
+1. Created IPC handler in `electron/main.js` - reads file, converts to base64
+2. Exposed API in `electron/preload.js` - `loadLogo(logoPath)`
+3. Updated Logo component - async IPC-based loading
+
+**Design Changes:**
+- Changed logo from circle to rounded square: `border-radius: 50%` → `5px`
+- Better alignment with modern UI design patterns
+
+**Files Modified:**
+- `electron/main.js` - Added `logo:load` IPC handler
+- `electron/preload.js` - Exposed `loadLogo()` API
+- `src/components/Logo.jsx` - Async IPC-based loading
+- `src/index.css` - Updated border-radius
+
+**Key Learnings:**
+1. Electron sandbox blocks file:// URLs - use IPC for local file access
+2. Base64 data URLs work in sandbox - main process reads file, renderer displays
+3. Secure by design - sandbox prevents arbitrary file access, IPC provides controlled access
+
+---
+
+## Recent Feature Implementations (2025-12-18)
+
+### ProviderSelector UI & ESC Cancellation (2025-12-18 Late Evening)
+
+**Major Features Implemented:**
+- ✅ **ProviderSelector UI component** - Manual LLM provider selection
+- ✅ **ESC key cancellation** - Graceful Ctrl+C signal with 2s timeout, then force kill
+
+**Bug Fixes:**
+- ✅ Fixed layout overflow issues (all content fits in viewport without scrolling)
+- ✅ Refined ProviderSelector styling (subtle, text-based selector)
+- ✅ Fixed Windows process termination (graceful Ctrl+C + force kill with SIGKILL)
+- ✅ Fixed stdin handling in Gemini adapter (keep open for cancellation signals)
+- ✅ Moved Promise resolution to EXIT event (more reliable than CLOSE event)
+- ✅ Added comprehensive debug logging for process lifecycle
+- ✅ StatusArea now properly hides when empty (prevents layout issues)
+
+---
+
+### GUI Testing & QA Setup (2025-12-18 Evening)
+
+**UX Improvements:**
+- ✅ Fixed checkmark display (shows immediately after file upload)
+- ✅ Fixed progress bar animation (smooth incremental updates)
+- ✅ Improved progress stage timing (mapped to actual workflow: 20%, 60%, 20%)
+- ✅ Changed date format from YYYY-MM-DD to DD-MM-YYYY (Danish standard)
+- ✅ Fixed janky border animation on button selection (consistent 2px borders + lift effect)
+- ✅ Fixed scoping bug in analysis-runner.js (cliResult variable scope)
+
+**Quality Assurance:**
+- ✅ **Set up ESLint with React support** - catches undefined variables, scoping issues
+- ✅ **Set up Husky pre-commit hooks** - auto-validates before commits
+- ✅ **Created smoke test** - 30s rapid validation of full workflow
+- ✅ Created comprehensive development workflow documentation
+- ✅ All code changes now validated with ESLint + smoke test before completion
+
+---
+
 ## MVP Testing & Bug Fixes (2025-12-18)
 
 **Session Goal:** Test Gemini integration end-to-end and fix any blocking issues

@@ -1,22 +1,34 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useAppState, useAppDispatch, useCanStartAnalysis } from './context/AppContext';
 import AppHeader from './components/AppHeader';
 import DropZone from './components/DropZone';
 import PromptSelector from './components/PromptSelector';
 import ProviderSelector from './components/ProviderSelector';
+import ProviderErrorOverlay from './components/ProviderErrorOverlay';
 import OutputButtons from './components/OutputButtons';
 import StatusArea from './components/StatusArea';
+import SettingsModal from './components/SettingsModal';
 
 function App() {
   const state = useAppState();
   const dispatch = useAppDispatch();
   const canStartAnalysis = useCanStartAnalysis();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   // ========== Event Handlers ==========
 
   const handleMenuClick = () => {
-    // TODO: Open settings modal (future enhancement)
-    console.log('Menu clicked - settings modal not yet implemented');
+    setSettingsOpen(true);
+  };
+
+  const handleSettingChange = async (key, value) => {
+    // Update context state
+    dispatch({
+      type: 'UPDATE_SETTING',
+      payload: { key, value }
+    });
+
+    // Auto-save will happen via the useEffect in AppContext
   };
 
   const handlePromptSelect = (promptName) => {
@@ -168,7 +180,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <AppHeader onMenuClick={handleMenuClick} />
+      <AppHeader onMenuClick={handleMenuClick} logoPath={state.logoPath} />
 
       <DropZone onFileUpload={handleFileUpload} />
 
@@ -183,14 +195,33 @@ function App() {
         selected={state.selectedProvider}
         onSelect={handleProviderSelect}
         visible={['idle', 'prompt-selected'].includes(state.uiState)}
+        loading={state.providersLoading}
       />
 
       <OutputButtons
         visible={state.uiState === 'completed'}
         onExport={exportReport}
+        selectedFormats={state.outputPreferences.defaultFormats}
       />
 
       <StatusArea onRetry={resetState} />
+
+      <SettingsModal
+        isOpen={settingsOpen}
+        onClose={() => setSettingsOpen(false)}
+        settings={{
+          logoPath: state.logoPath,
+          defaultFormats: state.outputPreferences.defaultFormats,
+          autoOpen: state.outputPreferences.autoOpen,
+          lastProvider: state.selectedProvider
+        }}
+        recentAnalyses={state.recentAnalyses}
+        onSettingChange={handleSettingChange}
+      />
+
+      <ProviderErrorOverlay
+        visible={!state.providersLoading && state.availableProviders.filter(p => p.available).length === 0}
+      />
     </div>
   );
 }

@@ -14,11 +14,14 @@ const SETTINGS_FILE = path.join(SETTINGS_DIR, 'settings.json');
  * Default settings
  */
 const DEFAULT_SETTINGS = {
-  // Last used CLI provider
-  lastProvider: 'claude',
+  // Last used CLI provider (null = empty/none)
+  lastProvider: null,
 
   // Last used prompt
-  lastPrompt: 'franchise-contract-review',
+  lastPrompt: null,
+
+  // Logo path (null = use default K logo)
+  logoPath: null,
 
   // Default branding configuration
   branding: {
@@ -30,6 +33,13 @@ const DEFAULT_SETTINGS = {
   },
 
   // Output preferences
+  outputPreferences: {
+    defaultFormats: ['pdf', 'docx', 'md'], // All formats selected by default
+    autoOpen: false,
+    organizationMode: 'client'
+  },
+
+  // Output preferences (legacy - kept for backwards compatibility)
   output: {
     defaultFormat: 'pdf',
     organizeByClient: true,
@@ -44,7 +54,10 @@ const DEFAULT_SETTINGS = {
   },
 
   // Recent clients (for quick selection)
-  recentClients: []
+  recentClients: [],
+
+  // Recent analyses (for settings modal)
+  recentAnalyses: []
 };
 
 /**

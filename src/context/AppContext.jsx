@@ -16,6 +16,7 @@ const initialState = {
   // CLI Provider
   availableProviders: [],  // Detected on mount
   selectedProvider: null,  // Auto-select first available
+  providersLoading: true,  // Loading state for provider detection
 
   // Analysis
   analysisResult: null,
@@ -36,7 +37,13 @@ const initialState = {
     defaultFormats: ['pdf', 'docx', 'md'],
     autoOpen: false,
     organizationMode: 'client'
-  }
+  },
+
+  // Settings Modal specific
+  logoPath: null,
+
+  // Recent analyses (for settings modal)
+  recentAnalyses: []
 };
 
 // ========== Reducer ==========
@@ -104,7 +111,8 @@ function appReducer(state, action) {
       return {
         ...state,
         availableProviders: providers,
-        selectedProvider: firstAvailable ? firstAvailable.name : null
+        selectedProvider: firstAvailable ? firstAvailable.name : null,
+        providersLoading: false
       };
     }
 
@@ -132,15 +140,32 @@ function appReducer(state, action) {
         currentStage: action.payload.stage          // 0-2
       };
 
-    case 'ANALYSIS_SUCCESS':
+    case 'ANALYSIS_SUCCESS': {
+      const result = action.payload;
+
+      // Add to recent analyses
+      const newAnalysis = {
+        clientName: state.clientName || 'Unnamed Client',
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+        promptType: state.selectedPrompt,
+        outputPath: result.metadata?.outputPath || ''
+      };
+
+      const updatedRecentAnalyses = [
+        newAnalysis,
+        ...state.recentAnalyses
+      ].slice(0, 5); // Keep only last 5
+
       return {
         ...state,
         uiState: 'completed',
-        analysisResult: action.payload,  // AnalysisResult
+        analysisResult: result,  // AnalysisResult
         analysisProgress: 100,
         currentStage: 2,
-        error: null
+        error: null,
+        recentAnalyses: updatedRecentAnalyses
       };
+    }
 
     case 'ANALYSIS_ERROR':
       return {
@@ -188,6 +213,37 @@ function appReducer(state, action) {
         }
       };
 
+    case 'UPDATE_SETTING': {
+      const { key, value } = action.payload;
+
+      // Handle nested settings
+      if (key === 'defaultFormats') {
+        return {
+          ...state,
+          outputPreferences: {
+            ...state.outputPreferences,
+            defaultFormats: value
+          }
+        };
+      }
+
+      if (key === 'autoOpen') {
+        return {
+          ...state,
+          outputPreferences: {
+            ...state.outputPreferences,
+            autoOpen: value
+          }
+        };
+      }
+
+      // Handle top-level settings
+      return {
+        ...state,
+        [key]: value
+      };
+    }
+
     case 'LOAD_SETTINGS_SUCCESS':
       return {
         ...state,
@@ -196,7 +252,9 @@ function appReducer(state, action) {
         recentClients: action.payload.recentClients || [],
         outputPreferences: action.payload.outputPreferences || initialState.outputPreferences,
         selectedProvider: action.payload.lastProvider || state.selectedProvider,
-        selectedPrompt: action.payload.lastPrompt || null
+        selectedPrompt: action.payload.lastPrompt || null,
+        logoPath: action.payload.logoPath || null,
+        recentAnalyses: action.payload.recentAnalyses || []
       };
 
     // ========== Error Actions ==========
@@ -306,7 +364,9 @@ export function AppProvider({ children }) {
         clientName: state.clientName,
         branding: state.branding,
         recentClients: state.recentClients,
-        outputPreferences: state.outputPreferences
+        outputPreferences: state.outputPreferences,
+        logoPath: state.logoPath,
+        recentAnalyses: state.recentAnalyses
       };
 
       window.electronAPI.saveSettings(settingsToSave).catch(err => {
@@ -321,7 +381,9 @@ export function AppProvider({ children }) {
     state.clientName,
     state.branding,
     state.recentClients,
-    state.outputPreferences
+    state.outputPreferences,
+    state.logoPath,
+    state.recentAnalyses
   ]);
 
   return (

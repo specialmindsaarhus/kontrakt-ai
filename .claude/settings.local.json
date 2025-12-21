@@ -34,7 +34,21 @@
       "Bash(npm run test:smoke:*)",
       "Bash(npm run electron:dev:*)",
       "Bash(timeout 10 cmd:*)",
-      "Bash(cat:*)"
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(timeout 60 bash -c \"cat prompts/franchise-contract-review.md && echo -e '\\\\n\\\\n---\\\\n\\\\nPlease analyze the following document:\\\\n\\\\n' && cat tests/sample-contract.txt\":*)",
+      "Bash(powershell -Command:*)",
+      "Bash(timeout 5 bash:*)",
+      "Bash(timeout 15 bash:*)",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(cmd /c \"taskkill /F /PID 6700\")",
+      "Bash(tasklist:*)",
+      "Bash(timeout 3 powershell:*)",
+      "Bash(cmd /c \"taskkill /F /PID 20888\")",
+      "Bash(timeout 8 tail:*)",
+      "Bash(exit 0)",
+      "Bash(del NUL)"
     ]
   }
 }

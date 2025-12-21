@@ -112,6 +112,19 @@ function setupIPCHandlers() {
     }
   });
 
+  ipcMain.handle('settings:reset', async (_event) => {
+    try {
+      const { resetSettings, loadSettings } = await import('../src/utils/settings-manager.js');
+      await resetSettings();
+      // Return the default settings
+      const defaultSettings = await loadSettings();
+      return defaultSettings;
+    } catch (error) {
+      console.error('Failed to reset settings:', error);
+      throw error;
+    }
+  });
+
   // ===== CLI Provider Detection =====
 
   ipcMain.handle('cli:detect-providers', async (_event) => {

@@ -1,13 +1,13 @@
-import { Menu } from 'lucide-react';
+import { Settings } from 'lucide-react';
 
 export default function HamburgerMenu({ onClick }) {
   return (
     <button
-      className="hamburger-menu"
+      className="settings-icon"
       onClick={onClick}
-      aria-label="Open menu"
+      aria-label="Åbn indstillinger"
     >
-      <Menu size={20} />
+      <Settings size={20} />
     </button>
   );
 }

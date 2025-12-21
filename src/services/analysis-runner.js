@@ -232,6 +232,11 @@ export async function runAnalysis(options, progressCallback = null) {
     // Send final progress
     sendProgress(100, 2, 'Complete');
 
+    // Get output directory path (directory containing the reports)
+    const outputPath = reports.length > 0
+      ? path.dirname(reports[0].path)
+      : '';
+
     // Return result
     return {
       success: true,
@@ -242,7 +247,8 @@ export async function runAnalysis(options, progressCallback = null) {
         provider,
         promptName,
         clientName,
-        documentPath
+        documentPath,
+        outputPath
       }
     };
 

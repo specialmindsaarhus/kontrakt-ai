@@ -1,4 +1,3 @@
-import { AlertTriangle } from 'lucide-react';
 import ProviderButton from './ProviderButton';
 
 /**
@@ -12,24 +11,24 @@ import ProviderButton from './ProviderButton';
  * - selected: Currently selected provider name
  * - onSelect: Callback when provider is selected
  * - visible: Whether to show the selector
+ * - loading: Whether providers are being detected
  */
-function ProviderSelector({ availableProviders, selected, onSelect, visible }) {
+function ProviderSelector({ availableProviders, selected, onSelect, visible, loading }) {
+  // Show loading state while detecting providers
+  if (loading) {
+    return (
+      <div className={`provider-buttons ${!visible && 'hidden'}`}>
+        <div className="provider-loading">Leder efter providers...</div>
+      </div>
+    );
+  }
+
   // Filter to only show available providers
   const installedProviders = availableProviders.filter(p => p.available);
 
-  // If no providers available, show error message
+  // If no providers available, return null (error overlay handles this)
   if (installedProviders.length === 0) {
-    return (
-      <div className={`provider-error ${!visible && 'hidden'}`}>
-        <AlertTriangle size={20} />
-        <p>Ingen LLM CLI fundet. Installer mindst én:</p>
-        <ul>
-          <li><a href="https://ai.google.dev/gemini-api/docs/cli" target="_blank" rel="noopener noreferrer">Gemini CLI</a></li>
-          <li><a href="https://claude.ai/cli" target="_blank" rel="noopener noreferrer">Claude CLI</a></li>
-          <li><a href="https://platform.openai.com/docs" target="_blank" rel="noopener noreferrer">OpenAI CLI</a></li>
-        </ul>
-      </div>
-    );
+    return null;
   }
 
   // If only one provider available, optionally hide selector (or show it disabled)

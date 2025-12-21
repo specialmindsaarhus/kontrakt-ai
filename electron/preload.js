@@ -5,6 +5,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // ========== Settings ==========
   loadSettings: () => ipcRenderer.invoke('settings:load'),
   saveSettings: (settings) => ipcRenderer.invoke('settings:save', settings),
+  resetSettings: () => ipcRenderer.invoke('settings:reset'),
 
   // ========== CLI Provider Detection ==========
   detectCLIProviders: () => ipcRenderer.invoke('cli:detect-providers'),
