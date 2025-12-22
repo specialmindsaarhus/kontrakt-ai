@@ -453,8 +453,13 @@ export class BaseCLIProvider {
     if (child.killed) return;
 
     // Try Ctrl+C first (graceful)
-    if (child.stdin && !child.stdin.destroyed) {
-      child.stdin.write('\x03'); // Ctrl+C
+    // Check if stdin is writable (not ended or destroyed)
+    if (child.stdin && !child.stdin.destroyed && child.stdin.writable) {
+      try {
+        child.stdin.write('\x03'); // Ctrl+C
+      } catch (_err) {
+        // Ignore write errors (stream might have closed)
+      }
     }
 
     // Force kill after 2 seconds
