@@ -4,10 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Current Status
 
-**Last Updated:** 2025-12-21
+**Last Updated:** 2025-12-22
 **GitHub Repository:** https://github.com/specialmindsaarhus/kontrakt-ai.git
 **Platform:** Windows (macOS support pending)
-**Status:** ✅ **PRODUCTION READY - Windows MVP v1.1**
+**Status:** ✅ **Windows MVP v1.2 - Provider Abstraction COMPLETE**
+**Branch:** `feature/provider-abstraction` (ready to merge)
 
 ### What Works Right Now
 
@@ -38,31 +39,47 @@ For detailed implementation history, see [HISTORY.md](./HISTORY.md).
 
 ## Product Roadmap
 
-### ✅ Windows MVP v1.1 - Settings Phase 2 (COMPLETED 2025-12-21)
+### ✅ Windows MVP v1.2 - Provider Abstraction (COMPLETED 2025-12-22)
+
+**Branch:** `feature/provider-abstraction` (ready to merge to main)
 
 **Implemented:**
-1. ✅ Logo thumbnail preview (60x60px, replaces filename text)
-2. ✅ Reset to defaults button (with confirmation dialog)
+1. ✅ BaseCLIProvider abstract class (shared process management)
+2. ✅ ClaudeCLIProvider (~95 lines, down from 459!)
+3. ✅ GeminiCLIProvider (~95 lines, down from 450!)
+4. ✅ ProviderError class with Danish error messages
+5. ✅ CLIErrorMapper for consistent error classification
+6. ✅ LegacyAdapterBridge for backward compatibility
+7. ✅ ESC key cancellation bug fixed (stream write error)
+
+**Code Reduction:**
+- Before: 909 lines of duplicate adapter code
+- After: ~630 lines total (shared + specific)
+- Future providers: Only ~50-100 lines each!
 
 **Success Criteria Met:**
-- ✅ All settings persist across restarts
-- ✅ Logo preview shows actual image before saving
-- ✅ Reset button restores factory defaults:
-  - K logo (no custom logo)
-  - All 3 formats selected (PDF, Word, Markdown)
-  - Auto-open disabled
-  - Recent provider empty
-  - Recent analyses empty
-- ✅ Settings auto-save with debouncing (1s delay)
+- ✅ Adding new provider requires <2 hours
+- ✅ All existing functionality works unchanged
+- ✅ No performance regression
+- ✅ Smoke test passes (109s)
+- ✅ ESLint clean
 
-**Changes from Original Plan:**
-- ❌ Company name removed (didn't work as expected)
-- ❌ Color picker deferred to future release
-- ❌ Contact info deferred to future release
+**Next Steps (when resuming):**
+1. Optional: Improve cancellation UX (show "Cancelled" not error)
+2. Merge to main: `git checkout main && git merge feature/provider-abstraction && git push`
+3. Delete old adapters (claude-adapter.js, gemini-adapter.js)
 
 ---
 
-### 🎯 Windows MVP v1.2 - Provider Abstraction
+### ✅ Windows MVP v1.1 - Settings Phase 2 (COMPLETED 2025-12-21)
+
+**Implemented:**
+1. ✅ Logo thumbnail preview (60x60px)
+2. ✅ Reset to defaults button (with confirmation)
+
+---
+
+### 🎯 Windows MVP v1.3 - Custom Instructions
 **Target:** Before OpenAI adapter
 **Estimated Effort:** 20-24 hours
 **Specs:**
