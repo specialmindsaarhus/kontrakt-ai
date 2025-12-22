@@ -80,39 +80,75 @@ For detailed implementation history, see [HISTORY.md](./HISTORY.md).
 
 ---
 
-### 🎯 Windows MVP v1.3 - Custom Instructions
-**Target:** Before OpenAI adapter
-**Estimated Effort:** 20-24 hours
-**Specs:**
-- Main: `specs/provider-abstraction.spec.md`
-- Supplemental:
-  - `specs/provider-abstraction-cli-pattern.spec.md` - Base CLI provider pattern
-  - `specs/provider-abstraction-error-mapping.spec.md` - Error classification guide
-  - `specs/provider-abstraction-testing.spec.md` - Test strategy & requirements
-  - `specs/provider-abstraction-migration.spec.md` - Step-by-step migration guide
+### 🎯 Windows MVP v1.3 - GUI Installation Process
+**Target:** Next priority after v1.2
+**Estimated Effort:** 12-16 hours
 
 **Must-Haves:**
-1. Refactor adapters to stateless provider interface
-2. Standardized error handling across all providers
-3. Provider capability detection (streaming, max tokens, etc.)
-4. Unified progress reporting interface
-5. Automated adapter tests (all providers)
+1. GUI wizard for provider installation
+   - Detect which providers are missing
+   - Show installation instructions for each provider
+   - Offer automated installation via npm/pip commands
+   - Progress indicators during installation
+2. "Install for me" button with sudo prompt (Windows/Mac)
+   - Execute: `npm install -g @anthropic-ai/claude-cli`
+   - Execute: `npm install -g @google/generative-ai-cli`
+   - Handle installation errors gracefully
+3. Post-installation verification
+   - Verify CLI is accessible after install
+   - Guide user through login process if needed
+4. First-run experience
+   - Show provider installation wizard on first launch
+   - Allow skip for advanced users
 
 **Why This Matters:**
-- **Current Problem:** Adapters tightly coupled to CLI syntax and file paths
-- **Solution:** Clean interface makes adding new providers trivial
-- **Future Benefit:** Easy to add APIs, local models, web sessions
+- **Current Problem:** Users must manually install CLIs in terminal (technical barrier)
+- **Solution:** One-click installation from GUI
+- **Future Benefit:** Lower barrier to entry for non-technical users
 
 **Success Criteria:**
-- Adding new provider requires <2 hours
-- All existing functionality works unchanged
-- No performance regression
-- Test coverage >90%
+- User can install all providers without touching terminal
+- Installation errors show helpful recovery instructions
+- Works on Windows (Mac support in v1.4)
 
 ---
 
-### 🎯 Windows MVP v1.3 - Custom Instructions
-**Target:** After provider abstraction
+### 🍎 MVP v1.4 - macOS Support Investigation
+**Target:** After v1.3 GUI Installation
+**Estimated Effort:** 20-30 hours (investigation + implementation)
+
+**Investigation Phase (4-6 hours):**
+1. Evaluate container-based approach
+   - Docker Desktop for Mac (requires installation)
+   - Podman Desktop (lighter alternative)
+   - Pros: Isolated environment, consistent PATH
+   - Cons: Additional dependency, performance overhead
+2. Evaluate native Mac approach
+   - Fix PATH environment loading from shell profile
+   - Homebrew integration for auto-install
+   - Pros: Better performance, native experience
+   - Cons: More platform-specific code
+3. Recommendation: Document trade-offs and choose approach
+
+**Implementation Phase (16-24 hours):**
+- **If Container:** Containerized CLI runner with volume mounts
+- **If Native:** PATH loading, Homebrew detection, universal binary
+
+**Critical Must-Haves:**
+1. CLI detection on macOS (Homebrew paths, npm global)
+2. Installation automation (via GUI from v1.3)
+3. Process management fixes (kill process groups)
+4. Universal binary build (ARM64 + x86_64)
+
+**Success Criteria:**
+- Mac users can install and run without terminal usage
+- Works on both Intel and Apple Silicon
+- Container approach (if chosen) is transparent to user
+
+---
+
+### 🎯 MVP v1.5 - Custom Instructions
+**Target:** After macOS support
 **Estimated Effort:** 16-20 hours
 **Spec:** `specs/provider-custom-instructions.spec.md`
 
@@ -133,41 +169,6 @@ For detailed implementation history, see [HISTORY.md](./HISTORY.md).
 - Users can edit instructions via GUI
 - Changes apply to next analysis (not current)
 - Default instructions always available (reset button)
-
----
-
-### 🍎 macOS Beta Release
-**Target:** After Windows v1.2
-**Estimated Effort:** 38 hours (critical path only)
-
-**Critical Must-Haves (Blocking Beta):**
-1. Fix PATH environment loading from shell profile (12 hours)
-   - Load `.zshrc` or `.bash_profile` before spawning CLIs
-   - Fallback to common paths: `/opt/homebrew/bin`, `/usr/local/bin`, `~/.npm-global/bin`
-2. CLI location fallback checks (8 hours)
-   - Check Homebrew paths for Intel (x86_64) and Apple Silicon (ARM64)
-   - Check npm global paths
-3. Pre-flight CLI authentication check (6 hours)
-   - Detect "auth required" errors
-   - Show helpful Danish messages: "Åbn Terminal og kør: `claude login`"
-4. Fix process group termination (8 hours)
-   - Kill process group with `process.kill(-pid, 'SIGKILL')`
-   - Prevent background processes after cancellation
-5. Build universal binary (4 hours)
-   - ARM64 + x86_64 support
-   - No Rosetta 2 issues
-
-**Success Criteria:**
-- CLIs detected on fresh macOS install (Homebrew or npm)
-- Analysis works on Intel and Apple Silicon Macs
-- ESC cancellation kills all processes (no zombie CLIs)
-- Auth errors show actionable guidance
-- DMG installer works without Gatekeeper bypass
-
-**Deferred to Production:**
-- Code signing and notarization (8 hours) - works after Gatekeeper bypass
-- Platform-specific data directories (4 hours) - nice-to-have
-- Homebrew cask distribution (4 hours) - post-launch
 
 ---
 
