@@ -1,6 +1,5 @@
 import path from 'path';
-import { createClaudeAdapter } from '../adapters/claude-adapter.js';
-import { createGeminiAdapter } from '../adapters/gemini-adapter.js';
+import { createClaudeProvider, createGeminiProvider } from '../providers/index.js';
 import { getPromptPath, promptExists } from '../utils/prompt-loader.js';
 import { generateReport } from '../utils/report-generator.js';
 import { generateOutputPath } from '../utils/output-manager.js';
@@ -311,9 +310,9 @@ async function validateInputs({ provider, documentPath, promptName }) {
 function getAdapter(provider) {
   switch (provider) {
     case 'claude':
-      return createClaudeAdapter();
+      return createClaudeProvider();
     case 'gemini':
-      return createGeminiAdapter();
+      return createGeminiProvider();
     case 'openai':
       // TODO: Implement OpenAI adapter
       throw ErrorFactory.generic(
