@@ -7,8 +7,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **Last Updated:** 2025-12-22
 **GitHub Repository:** https://github.com/specialmindsaarhus/kontrakt-ai.git
 **Platform:** Windows (macOS support pending)
-**Status:** ✅ **Windows MVP v1.2 - Provider Abstraction COMPLETE**
-**Branch:** `feature/provider-abstraction` (ready to merge)
+**Status:** ✅ **Windows MVP v1.2 - Provider Abstraction COMPLETE & MERGED**
+**Branch:** `main`
 
 ### What Works Right Now
 
@@ -17,7 +17,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ Manual provider selection (Gemini, Claude, OpenAI)
 - ✅ Both Claude and Gemini CLI working reliably (~60-130s analysis time)
 - ✅ Real-time progress updates during analysis
-- ✅ ESC key cancellation (graceful Ctrl+C + force kill)
+- ✅ ESC key cancellation (clean reset without error message)
 - ✅ Settings modal with Phase 2 features:
   - ✅ Logo upload with 60x60px thumbnail preview
   - ✅ Format selection (PDF, Word, Markdown)
@@ -39,9 +39,9 @@ For detailed implementation history, see [HISTORY.md](./HISTORY.md).
 
 ## Product Roadmap
 
-### ✅ Windows MVP v1.2 - Provider Abstraction (COMPLETED 2025-12-22)
+### ✅ Windows MVP v1.2 - Provider Abstraction (COMPLETED & MERGED 2025-12-22)
 
-**Branch:** `feature/provider-abstraction` (ready to merge to main)
+**Branch:** `main` (merged from feature/provider-abstraction)
 
 **Implemented:**
 1. ✅ BaseCLIProvider abstract class (shared process management)
@@ -50,7 +50,7 @@ For detailed implementation history, see [HISTORY.md](./HISTORY.md).
 4. ✅ ProviderError class with Danish error messages
 5. ✅ CLIErrorMapper for consistent error classification
 6. ✅ LegacyAdapterBridge for backward compatibility
-7. ✅ ESC key cancellation bug fixed (stream write error)
+7. ✅ ESC key cancellation UX fixed (clean reset without error message)
 
 **Code Reduction:**
 - Before: 909 lines of duplicate adapter code
@@ -61,13 +61,14 @@ For detailed implementation history, see [HISTORY.md](./HISTORY.md).
 - ✅ Adding new provider requires <2 hours
 - ✅ All existing functionality works unchanged
 - ✅ No performance regression
-- ✅ Smoke test passes (109s)
+- ✅ Smoke test passes (~150s)
 - ✅ ESLint clean
+- ✅ ESC cancellation resets cleanly without error
 
-**Next Steps (when resuming):**
-1. Optional: Improve cancellation UX (show "Cancelled" not error)
-2. Merge to main: `git checkout main && git merge feature/provider-abstraction && git push`
-3. Delete old adapters (claude-adapter.js, gemini-adapter.js)
+**Bugs Fixed:**
+- parseError() now receives full ProcessResult (preserves cancelled/timedOut flags)
+- analysis-runner preserves errorCode in returned result
+- App.jsx checks error message as fallback (Electron IPC workaround)
 
 ---
 
