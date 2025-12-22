@@ -236,33 +236,37 @@ export default function SettingsModal({
           {/* Content */}
           <div className="settings-content">
 
-            {/* Section 1: Style Settings */}
+            {/* Section 4: Recent Analyses */}
             <div className="settings-section">
-              <h3>Udseende</h3>
-
-              {/* Logo Upload with Thumbnail Preview */}
-              <div className="input-group">
-                <label>Logo:</label>
-                <div className="logo-upload-container">
-                  <button
-                    onClick={handleLogoUpload}
-                    disabled={uploadingLogo}
-                    className="upload-button"
-                  >
-                    {uploadingLogo ? 'Indlæser...' : 'Vælg logo'}
-                  </button>
-                  {logoPreview && (
-                    <div className="logo-thumbnail">
-                      <img src={logoPreview} alt="Logo preview" />
-                    </div>
-                  )}
-                  {!logoPreview && settings.logoPath && (
-                    <span className="logo-filename">
-                      {getFilename(settings.logoPath)}
-                    </span>
-                  )}
+              <h3>Seneste Analyser</h3>
+              {recentAnalyses && recentAnalyses.length > 0 ? (
+                <div className="recent-list">
+                  {recentAnalyses.slice(0, 5).map((analysis, idx) => (
+                    <button
+                      key={idx}
+                      className="recent-item"
+                      onClick={() => openFolder(analysis.outputPath)}
+                    >
+                      <span className="arrow">›</span>
+                      <span className="client">{analysis.clientName || 'Unnamed Client'}</span>
+                      <span className="separator">•</span>
+                      <span className="date">{formatDate(analysis.date)}</span>
+                      <span className="separator">•</span>
+                      <span className="prompt">{getPromptLabel(analysis.promptType)}</span>
+                    </button>
+                  ))}
                 </div>
-              </div>
+              ) : (
+                <p className="empty-state">Ingen analyser endnu</p>
+              )}
+            </div>
+
+            {/* Section 3: Session State */}
+            <div className="settings-section">
+              <h3>Seneste Provider</h3>
+              <p className="provider-display">
+                {settings.lastProvider || 'Ingen valgt'}
+              </p>
             </div>
 
             {/* Section 2: Output Preferences */}
@@ -311,38 +315,33 @@ export default function SettingsModal({
               </div>
             </div>
 
-            {/* Section 3: Session State */}
+            {/* Section 1: Style Settings */}
             <div className="settings-section">
-              <h3>Seneste Provider</h3>
-              <p className="provider-display">
-                {settings.lastProvider || 'Ingen valgt'}{' '}
-                <span className="muted">(senest brugt)</span>
-              </p>
-            </div>
+              <h3>Udseende</h3>
 
-            {/* Section 4: Recent Analyses */}
-            <div className="settings-section">
-              <h3>Seneste Analyser</h3>
-              {recentAnalyses && recentAnalyses.length > 0 ? (
-                <div className="recent-list">
-                  {recentAnalyses.slice(0, 5).map((analysis, idx) => (
-                    <button
-                      key={idx}
-                      className="recent-item"
-                      onClick={() => openFolder(analysis.outputPath)}
-                    >
-                      <span className="arrow">›</span>
-                      <span className="client">{analysis.clientName || 'Unnamed Client'}</span>
-                      <span className="separator">•</span>
-                      <span className="date">{formatDate(analysis.date)}</span>
-                      <span className="separator">•</span>
-                      <span className="prompt">{getPromptLabel(analysis.promptType)}</span>
-                    </button>
-                  ))}
+              {/* Logo Upload with Thumbnail Preview */}
+              <div className="input-group">
+                <label>Logo:</label>
+                <div className="logo-upload-container">
+                  <button
+                    onClick={handleLogoUpload}
+                    disabled={uploadingLogo}
+                    className="upload-button"
+                  >
+                    {uploadingLogo ? 'Indlæser...' : 'Vælg logo'}
+                  </button>
+                  {logoPreview && (
+                    <div className="logo-thumbnail">
+                      <img src={logoPreview} alt="Logo preview" />
+                    </div>
+                  )}
+                  {!logoPreview && settings.logoPath && (
+                    <span className="logo-filename">
+                      {getFilename(settings.logoPath)}
+                    </span>
+                  )}
                 </div>
-              ) : (
-                <p className="empty-state">Ingen analyser endnu</p>
-              )}
+              </div>
             </div>
 
             {/* Section 5: Reset to Defaults */}

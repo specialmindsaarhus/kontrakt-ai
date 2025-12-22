@@ -65,7 +65,13 @@ For detailed implementation history, see [HISTORY.md](./HISTORY.md).
 ### 🎯 Windows MVP v1.2 - Provider Abstraction
 **Target:** Before OpenAI adapter
 **Estimated Effort:** 20-24 hours
-**Spec:** `specs/provider-abstraction.spec.md`
+**Specs:**
+- Main: `specs/provider-abstraction.spec.md`
+- Supplemental:
+  - `specs/provider-abstraction-cli-pattern.spec.md` - Base CLI provider pattern
+  - `specs/provider-abstraction-error-mapping.spec.md` - Error classification guide
+  - `specs/provider-abstraction-testing.spec.md` - Test strategy & requirements
+  - `specs/provider-abstraction-migration.spec.md` - Step-by-step migration guide
 
 **Must-Haves:**
 1. Refactor adapters to stateless provider interface
@@ -259,6 +265,10 @@ output/
 - `specs/user-flows.spec.md` - 10 user workflows (✅ implemented)
 - `specs/progress-mapping.spec.md` - Progress animation timing (✅ implemented)
 - `specs/provider-abstraction.spec.md` - LLM provider interface (❌ not implemented)
+  - `specs/provider-abstraction-cli-pattern.spec.md` - CLI provider base class pattern
+  - `specs/provider-abstraction-error-mapping.spec.md` - Error classification & Danish messages
+  - `specs/provider-abstraction-testing.spec.md` - Test strategy & coverage requirements
+  - `specs/provider-abstraction-migration.spec.md` - Step-by-step refactoring guide
 - `specs/provider-custom-instructions.spec.md` - Custom instructions system (❌ not implemented)
 
 ---
