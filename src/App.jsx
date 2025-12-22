@@ -82,7 +82,10 @@ function App() {
       console.error('Analysis failed:', error);
 
       // Handle cancellation - just reset, don't show error
-      if (error.code === 'ANALYSIS_CANCELLED' || error.cancelled) {
+      // Check code, cancelled flag, OR message content (Electron IPC doesn't preserve custom properties)
+      if (error.code === 'ANALYSIS_CANCELLED' ||
+          error.cancelled ||
+          error.message?.includes('Analysen blev afbrudt')) {
         console.log('Analysis cancelled by user');
         dispatch({ type: 'RESET_STATE' });
         return;

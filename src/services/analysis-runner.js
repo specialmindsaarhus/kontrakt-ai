@@ -179,7 +179,15 @@ export async function runAnalysis(options, progressCallback = null) {
 
       if (!cliResult.success) {
         // Handle specific error codes
-        if (cliResult.errorCode === 'AUTH_REQUIRED') {
+        if (cliResult.errorCode === 'CANCELLED') {
+          // Throw same error as checkCancellation() for consistent handling
+          const error = new Error('Analysen blev afbrudt');
+          error.errorCode = 'ANALYSIS_CANCELLED';
+          error.code = 'ANALYSIS_CANCELLED';
+          error.userMessage = 'Analysen blev afbrudt';
+          error.recoverySuggestions = ['Analysen blev stoppet af brugeren'];
+          throw error;
+        } else if (cliResult.errorCode === 'AUTH_REQUIRED') {
           throw ErrorFactory.authRequired(provider);
         } else if (cliResult.errorCode === 'TIMEOUT') {
           throw ErrorFactory.timeout(timeout);
@@ -265,7 +273,9 @@ export async function runAnalysis(options, progressCallback = null) {
     return {
       success: false,
       error: err.message,
+      errorCode: err.errorCode || err.code,  // Preserve error code for cancellation detection
       userMessage: err.getUserMessage ? err.getUserMessage() : err.message,
+      recoverySuggestions: err.recoverySuggestions,
       executionTime: totalTime
     };
   } finally {

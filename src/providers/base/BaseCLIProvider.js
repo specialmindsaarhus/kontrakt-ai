@@ -192,13 +192,10 @@ export class BaseCLIProvider {
    * Parse CLI error into ProviderError
    * @abstract
    * @protected
-   * @param {number} _code - Exit code
-   * @param {string} _stdout
-   * @param {string} _stderr
-   * @param {string | null} _signal
+   * @param {ProcessResult} _result - Full process result with cancelled/timedOut flags
    * @returns {import('./ProviderError.js').ProviderError}
    */
-  parseError(_code, _stdout, _stderr, _signal) {
+  parseError(_result) {
     throw new Error('Subclass must implement parseError()');
   }
 
@@ -252,7 +249,7 @@ export class BaseCLIProvider {
 
     // 5. Check for errors
     if (!result.success) {
-      throw this.parseError(result.code, result.stdout, result.stderr, result.signal);
+      throw this.parseError(result);
     }
 
     // 6. Normalize output

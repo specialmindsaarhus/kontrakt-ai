@@ -76,22 +76,11 @@ export class GeminiCLIProvider extends BaseCLIProvider {
   /**
    * Parse Gemini CLI error
    * @protected
-   * @param {number} code
-   * @param {string} stdout
-   * @param {string} stderr
-   * @param {string | null} signal
+   * @param {import('../base/BaseCLIProvider.js').ProcessResult} result
    * @returns {import('../base/ProviderError.js').ProviderError}
    */
-  parseError(code, stdout, stderr, signal) {
-    // Use default error mapping
-    return CLIErrorMapper.map(this.id, {
-      success: false,
-      code,
-      stdout,
-      stderr,
-      signal,
-      timedOut: false,
-      cancelled: false
-    });
+  parseError(result) {
+    // Use default error mapping with full ProcessResult (preserves cancelled/timedOut flags)
+    return CLIErrorMapper.map(this.id, result);
   }
 }
